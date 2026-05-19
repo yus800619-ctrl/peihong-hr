@@ -1,0 +1,187 @@
+-- V21：本薪投保＋特休使用期限＋員工完整資料欄位
+-- 重點：勞保/健保投保級距只用月薪/本薪 salary 計算；伙食津貼、職務加給與固定津貼只影響加班時薪與薪資應發，不影響投保級距。
+
+create extension if not exists "uuid-ossp";
+
+-- 員工基本資料欄位
+alter table employees add column if not exists job_grade text;
+alter table employees add column if not exists marital_status text;
+alter table employees add column if not exists national_id text;
+alter table employees add column if not exists address text;
+alter table employees add column if not exists bank_name text;
+alter table employees add column if not exists bank_account text;
+alter table employees add column if not exists phone text;
+alter table employees add column if not exists emergency_contact text;
+
+-- 任職與特休欄位
+alter table employees add column if not exists hire_date date;
+alter table employees add column if not exists termination_date date;
+alter table employees add column if not exists annual_leave_total numeric default 0;
+alter table employees add column if not exists annual_leave_used numeric default 0;
+alter table employees add column if not exists annual_leave_remaining numeric default 0;
+alter table employees add column if not exists annual_leave_expire_date date;
+
+-- 薪資與投保欄位
+alter table employees add column if not exists meal_allowance numeric default 0;
+alter table employees add column if not exists position_allowance numeric default 0;
+alter table employees add column if not exists fixed_fuel_allowance numeric default 0;
+alter table employees add column if not exists fixed_performance_bonus numeric default 0;
+alter table employees add column if not exists other_fixed_allowance numeric default 0;
+alter table employees add column if not exists health_dependents_count numeric default 0;
+alter table employees add column if not exists labor_insured_salary numeric default 0;
+alter table employees add column if not exists health_insured_salary numeric default 0;
+alter table employees add column if not exists labor_insurance numeric default 0;
+alter table employees add column if not exists health_insurance numeric default 0;
+alter table employees add column if not exists dependent_health_insurance numeric default 0;
+
+-- 薪資表保留完整員工資料快照
+alter table payroll add column if not exists payroll_detail jsonb;
+alter table payroll add column if not exists wage_base_total numeric default 0;
+alter table payroll add column if not exists overtime_hourly_rate numeric default 0;
+alter table payroll add column if not exists labor_insured_salary numeric default 0;
+alter table payroll add column if not exists health_insured_salary numeric default 0;
+alter table payroll add column if not exists health_dependents_count numeric default 0;
+alter table payroll add column if not exists employee_health_total numeric default 0;
+alter table payroll add column if not exists company_labor_insurance numeric default 0;
+alter table payroll add column if not exists company_health_insurance numeric default 0;
+alter table payroll add column if not exists company_pension numeric default 0;
+alter table payroll add column if not exists company_total_cost numeric default 0;
+
+create or replace function peihong_labor_grade_v21(p_salary numeric)
+returns numeric language plpgsql immutable as $$
+begin
+  if coalesce(p_salary,0) >= 43901 then return 45800;
+  elsif coalesce(p_salary,0) >= 42001 then return 43900;
+  elsif coalesce(p_salary,0) >= 40101 then return 42000;
+  elsif coalesce(p_salary,0) >= 38201 then return 40100;
+  elsif coalesce(p_salary,0) >= 36301 then return 38200;
+  elsif coalesce(p_salary,0) >= 34801 then return 36300;
+  elsif coalesce(p_salary,0) >= 33301 then return 34800;
+  elsif coalesce(p_salary,0) >= 31801 then return 33300;
+  elsif coalesce(p_salary,0) >= 30301 then return 31800;
+  elsif coalesce(p_salary,0) >= 29501 then return 30300;
+  else return 29500;
+  end if;
+end; $$;
+
+create or replace function peihong_health_grade_v21(p_salary numeric)
+returns numeric language plpgsql immutable as $$
+begin
+  if coalesce(p_salary,0) >= 101101 then return 105600;
+  elsif coalesce(p_salary,0) >= 96601 then return 101100;
+  elsif coalesce(p_salary,0) >= 92101 then return 96600;
+  elsif coalesce(p_salary,0) >= 87601 then return 92100;
+  elsif coalesce(p_salary,0) >= 83901 then return 87600;
+  elsif coalesce(p_salary,0) >= 80201 then return 83900;
+  elsif coalesce(p_salary,0) >= 76501 then return 80200;
+  elsif coalesce(p_salary,0) >= 72801 then return 76500;
+  elsif coalesce(p_salary,0) >= 69801 then return 72800;
+  elsif coalesce(p_salary,0) >= 66801 then return 69800;
+  elsif coalesce(p_salary,0) >= 63801 then return 66800;
+  elsif coalesce(p_salary,0) >= 60801 then return 63800;
+  elsif coalesce(p_salary,0) >= 57801 then return 60800;
+  elsif coalesce(p_salary,0) >= 55401 then return 57800;
+  elsif coalesce(p_salary,0) >= 53001 then return 55400;
+  elsif coalesce(p_salary,0) >= 50601 then return 53000;
+  elsif coalesce(p_salary,0) >= 48201 then return 50600;
+  elsif coalesce(p_salary,0) >= 45801 then return 48200;
+  elsif coalesce(p_salary,0) >= 43901 then return 45800;
+  elsif coalesce(p_salary,0) >= 42001 then return 43900;
+  elsif coalesce(p_salary,0) >= 40101 then return 42000;
+  elsif coalesce(p_salary,0) >= 38201 then return 40100;
+  elsif coalesce(p_salary,0) >= 36301 then return 38200;
+  elsif coalesce(p_salary,0) >= 34801 then return 36300;
+  elsif coalesce(p_salary,0) >= 33301 then return 34800;
+  elsif coalesce(p_salary,0) >= 31801 then return 33300;
+  elsif coalesce(p_salary,0) >= 30301 then return 31800;
+  elsif coalesce(p_salary,0) >= 29501 then return 30300;
+  else return 29500;
+  end if;
+end; $$;
+
+create or replace function peihong_annual_leave_days_v21(p_hire_date date, p_as_of date default current_date)
+returns numeric language plpgsql immutable as $$
+declare
+  months integer;
+  years integer;
+begin
+  if p_hire_date is null then return 0; end if;
+  months := (date_part('year', age(p_as_of, p_hire_date))::int * 12) + date_part('month', age(p_as_of, p_hire_date))::int;
+  years := date_part('year', age(p_as_of, p_hire_date))::int;
+  if months < 6 then return 0;
+  elsif months < 12 then return 3;
+  elsif years < 2 then return 7;
+  elsif years < 3 then return 10;
+  elsif years < 5 then return 14;
+  elsif years < 10 then return 15;
+  else return least(30, 15 + (years - 10 + 1));
+  end if;
+end; $$;
+
+create or replace function peihong_sync_employee_v21()
+returns trigger language plpgsql as $$
+declare
+  dep_count numeric;
+begin
+  dep_count := least(greatest(coalesce(new.health_dependents_count,0),0),3);
+
+  -- V21：投保只看月薪/本薪 salary
+  new.labor_insured_salary := peihong_labor_grade_v21(new.salary);
+  new.health_insured_salary := peihong_health_grade_v21(new.salary);
+  new.labor_insurance := round(new.labor_insured_salary * 0.125 * 0.2);
+  new.health_insurance := round(new.health_insured_salary * 0.0517 * 0.3);
+  new.dependent_health_insurance := round(new.health_insured_salary * 0.0517 * 0.3 * dep_count);
+  new.health_dependents_count := dep_count;
+
+  if coalesce(new.annual_leave_total,0) = 0 and new.hire_date is not null then
+    new.annual_leave_total := peihong_annual_leave_days_v21(new.hire_date, current_date);
+  end if;
+
+  new.annual_leave_used := coalesce(new.annual_leave_used,0);
+  new.annual_leave_remaining := greatest(coalesce(new.annual_leave_total,0) - coalesce(new.annual_leave_used,0), 0);
+
+  return new;
+end; $$;
+
+drop trigger if exists trg_peihong_sync_employee_insurance on employees;
+drop trigger if exists trg_peihong_sync_employee_v20 on employees;
+drop trigger if exists trg_peihong_sync_employee_v21 on employees;
+
+create trigger trg_peihong_sync_employee_v21
+before insert or update
+on employees
+for each row
+execute function peihong_sync_employee_v21();
+
+update employees set
+  salary = coalesce(salary,0),
+  meal_allowance = coalesce(meal_allowance,0),
+  position_allowance = coalesce(position_allowance,0),
+  fixed_fuel_allowance = coalesce(fixed_fuel_allowance,0),
+  fixed_performance_bonus = coalesce(fixed_performance_bonus,0),
+  other_fixed_allowance = coalesce(other_fixed_allowance,0),
+  health_dependents_count = coalesce(health_dependents_count,0),
+  annual_leave_total = case when coalesce(annual_leave_total,0)=0 and hire_date is not null then peihong_annual_leave_days_v21(hire_date, current_date) else coalesce(annual_leave_total,0) end,
+  annual_leave_used = coalesce(annual_leave_used,0),
+  annual_leave_remaining = greatest(coalesce(annual_leave_total,0) - coalesce(annual_leave_used,0),0);
+
+select
+  employee_no,
+  name,
+  department,
+  position,
+  job_grade,
+  salary as 投保本薪,
+  meal_allowance as 伙食津貼,
+  position_allowance as 職務加給,
+  (coalesce(salary,0)+coalesce(meal_allowance,0)+coalesce(position_allowance,0)+coalesce(fixed_fuel_allowance,0)+coalesce(fixed_performance_bonus,0)+coalesce(other_fixed_allowance,0)) as 加班工資基礎,
+  labor_insured_salary as 勞保級距,
+  health_insured_salary as 健保級距,
+  annual_leave_total as 特休總天數,
+  annual_leave_used as 特休已用,
+  annual_leave_remaining as 特休剩餘,
+  annual_leave_expire_date as 特休使用期限,
+  phone,
+  emergency_contact
+from employees
+order by employee_no;
