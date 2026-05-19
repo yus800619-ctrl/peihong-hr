@@ -1,0 +1,43 @@
+-- V24：HR 後台帳密可自行修改版
+-- 執行後，HR 後台帳號密碼會存到 Supabase 的 hr_settings 資料表。
+-- 首次預設：帳號 admin / 密碼 peihong2026
+
+create table if not exists hr_settings (
+  setting_key text primary key,
+  setting_value text not null,
+  updated_at timestamp default now()
+);
+
+insert into hr_settings (setting_key, setting_value, updated_at)
+values
+  ('admin_account', 'admin', now()),
+  ('admin_password', 'peihong2026', now())
+on conflict (setting_key) do nothing;
+
+alter table hr_settings enable row level security;
+
+drop policy if exists peihong_v24_hr_settings_select on hr_settings;
+create policy peihong_v24_hr_settings_select
+on hr_settings
+for select
+to anon, authenticated
+using (true);
+
+drop policy if exists peihong_v24_hr_settings_insert on hr_settings;
+create policy peihong_v24_hr_settings_insert
+on hr_settings
+for insert
+to anon, authenticated
+with check (true);
+
+drop policy if exists peihong_v24_hr_settings_update on hr_settings;
+create policy peihong_v24_hr_settings_update
+on hr_settings
+for update
+to anon, authenticated
+using (true)
+with check (true);
+
+select setting_key, setting_value, updated_at
+from hr_settings
+order by setting_key;

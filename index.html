@@ -54,7 +54,7 @@ label{font-size:14px;font-weight:800;color:#334155}table{width:100%;border-colla
 <p class="muted">送出後由 HR 後台審核，核准後可帶入薪資。</p>
 <button onclick="submitOvertime()">送出加班申請</button>
 </div></div><div class="grid grid2"><div class="card"><h2>我的打卡紀錄</h2><div id="myAttendance" class="scroll"></div></div><div class="card"><h2>我的加班申請</h2><div id="myOvertime" class="scroll"></div></div><div class="card"><h2>我的薪資</h2><label>薪資月份</label><input id="myPayrollMonth" type="month" /><button onclick="loadMyPayroll()">查詢薪資</button><div id="myPayroll"></div></div></div></div></section>
-<section id="page-admin" class="page hide"><div class="card"><h1>HR 後台</h1><p class="muted">HR 後台需帳號密碼登入。請正式使用前立即修改後台密碼。</p><button onclick="loadAdminAll()">重新整理後台資料</button><button class="btn2" onclick="checkEmployeesTable()">檢查員工資料</button><button class="btnRed" onclick="hrLogout()">HR登出</button><button class="btn2" onclick="fillMissingEmployeeAccounts()">補齊員工帳號</button><button class="btnGreen" onclick="createDemoEmployee()">建立測試員工</button><button class="btn2" onclick="exportEmployeesCsv()">匯出員工CSV</button><button class="btn2" onclick="exportAttendanceCsv()">匯出出勤CSV</button><button class="btn2" onclick="changeAdminPin()">修改後台密碼</button></div><div class="grid grid2"><div class="card"><h2>公司設定</h2><label>公司名稱</label><input id="companyName" value="沛鴻聚合工程有限公司" /><label>公司 GPS Lat</label><input id="companyLat" type="number" step="0.0000001" /><label>公司 GPS Lng</label><input id="companyLng" type="number" step="0.0000001" /><label>打卡範圍（公尺）</label><input id="companyRadius" type="number" value="100" /><button onclick="saveCompany()">儲存公司設定</button></div><div class="card"><h2>新增員工</h2><label>員工編號</label><input id="newEmpNo" placeholder="E001" /><label>姓名</label><input id="newEmpName" /><label>部門</label><input id="newEmpDept" /><label>職稱</label><input id="newEmpPos" /><label>職等</label><input id="newEmpGrade" placeholder="例：A1 / 工程師一級" /><label>婚姻狀態</label><select id="newEmpMaritalStatus"><option value="">請選擇</option><option>未婚</option><option>已婚</option><option>其他</option></select><label>身分證字號</label><input id="newEmpNationalId" /><label>居住地址</label><input id="newEmpAddress" /><label>銀行名稱/代碼</label><input id="newEmpBankName" placeholder="例：台灣銀行 004" /><label>薪轉帳號</label><input id="newEmpBankAccount" /><label>金融卡號</label><input id="newEmpBankCardNumber" /><label>電話</label><input id="newEmpPhone" /><label>緊急聯絡人</label><input id="newEmpEmergencyContact" placeholder="姓名/關係/電話" /><label>到職日</label><input id="newEmpHireDate" type="date" /><label>離職日</label><input id="newEmpTerminationDate" type="date" /><label>特休總天數</label><input id="newEmpAnnualLeaveTotal" type="number" value="0" step="0.5" /><label>特休已用天數</label><input id="newEmpAnnualLeaveUsed" type="number" value="0" step="0.5" /><label>特休剩餘天數</label><input id="newEmpAnnualLeaveRemaining" type="number" value="0" step="0.5" readonly /><label>特休使用期限</label><input id="newEmpAnnualLeaveExpireDate" type="date" /><label>登入帳號</label><input id="newEmpLogin" placeholder="預設同員工編號" /><label>登入密碼</label><input id="newEmpPassword" placeholder="請輸入密碼" type="text" /><label>月薪/本薪</label><input id="newEmpSalary" type="number" value="0" /><label>伙食津貼</label><input id="newEmpMeal" type="number" value="0" /><label>職務加給</label><input id="newEmpPositionAllowance" type="number" value="0" /><label>固定油資補助</label><input id="newEmpFuel" type="number" value="0" /><label>固定績效獎金</label><input id="newEmpFixedBonus" type="number" value="0" /><label>其他固定津貼</label><input id="newEmpOtherFixed" type="number" value="0" /><label>勞保扣款</label><input id="newEmpLabor" type="number" value="0" /><label>健保扣款</label><input id="newEmpHealth" type="number" value="0" /><label>健保眷屬人數</label><input id="newEmpDependents" type="number" value="0" /><label>眷屬健保扣款</label><input id="newEmpDepHealth" type="number" value="0" /><div id="newEmpInsurancePreview" class="ok">輸入薪資後會自動試算加班工資基礎；勞健保級距只看月薪/本薪。</div><button onclick="addEmployee()">新增員工</button></div></div><div class="card"><h2>員工列表</h2><div class="warn">點「編輯」可修改月薪、勞保、健保、眷屬健保、帳號密碼。</div><div id="employeeDebug" class="muted"></div><div id="employeeTable" class="scroll"></div></div>
+<section id="page-admin" class="page hide"><div class="card"><h1>HR 後台</h1><p class="muted">HR 後台需帳號密碼登入。請正式使用前立即修改後台密碼。</p><button onclick="loadAdminAll()">重新整理後台資料</button><button class="btn2" onclick="checkEmployeesTable()">檢查員工資料</button><button class="btnRed" onclick="hrLogout()">HR登出</button><button class="btn2" onclick="fillMissingEmployeeAccounts()">補齊員工帳號</button><button class="btnGreen" onclick="createDemoEmployee()">建立測試員工</button><button class="btn2" onclick="exportEmployeesCsv()">匯出員工CSV</button><button class="btn2" onclick="exportAttendanceCsv()">匯出出勤CSV</button><button class="btn2" onclick="changeAdminPin()">修改後台帳密</button></div><div class="grid grid2"><div class="card"><h2>公司設定</h2><label>公司名稱</label><input id="companyName" value="沛鴻聚合工程有限公司" /><label>公司 GPS Lat</label><input id="companyLat" type="number" step="0.0000001" /><label>公司 GPS Lng</label><input id="companyLng" type="number" step="0.0000001" /><label>打卡範圍（公尺）</label><input id="companyRadius" type="number" value="100" /><button onclick="saveCompany()">儲存公司設定</button></div><div class="card"><h2>新增員工</h2><label>員工編號</label><input id="newEmpNo" placeholder="E001" /><label>姓名</label><input id="newEmpName" /><label>部門</label><input id="newEmpDept" /><label>職稱</label><input id="newEmpPos" /><label>職等</label><input id="newEmpGrade" placeholder="例：A1 / 工程師一級" /><label>婚姻狀態</label><select id="newEmpMaritalStatus"><option value="">請選擇</option><option>未婚</option><option>已婚</option><option>其他</option></select><label>身分證字號</label><input id="newEmpNationalId" /><label>居住地址</label><input id="newEmpAddress" /><label>銀行名稱/代碼</label><input id="newEmpBankName" placeholder="例：台灣銀行 004" /><label>薪轉帳號</label><input id="newEmpBankAccount" /><label>金融卡號</label><input id="newEmpBankCardNumber" /><label>電話</label><input id="newEmpPhone" /><label>緊急聯絡人</label><input id="newEmpEmergencyContact" placeholder="姓名/關係/電話" /><label>到職日</label><input id="newEmpHireDate" type="date" /><label>離職日</label><input id="newEmpTerminationDate" type="date" /><label>特休總天數</label><input id="newEmpAnnualLeaveTotal" type="number" value="0" step="0.5" /><label>特休已用天數</label><input id="newEmpAnnualLeaveUsed" type="number" value="0" step="0.5" /><label>特休剩餘天數</label><input id="newEmpAnnualLeaveRemaining" type="number" value="0" step="0.5" readonly /><label>特休使用期限</label><input id="newEmpAnnualLeaveExpireDate" type="date" /><label>登入帳號</label><input id="newEmpLogin" placeholder="預設同員工編號" /><label>登入密碼</label><input id="newEmpPassword" placeholder="請輸入密碼" type="text" /><label>月薪/本薪</label><input id="newEmpSalary" type="number" value="0" /><label>伙食津貼</label><input id="newEmpMeal" type="number" value="0" /><label>職務加給</label><input id="newEmpPositionAllowance" type="number" value="0" /><label>固定油資補助</label><input id="newEmpFuel" type="number" value="0" /><label>固定績效獎金</label><input id="newEmpFixedBonus" type="number" value="0" /><label>其他固定津貼</label><input id="newEmpOtherFixed" type="number" value="0" /><label>勞保扣款</label><input id="newEmpLabor" type="number" value="0" /><label>健保扣款</label><input id="newEmpHealth" type="number" value="0" /><label>健保眷屬人數</label><input id="newEmpDependents" type="number" value="0" /><label>眷屬健保扣款</label><input id="newEmpDepHealth" type="number" value="0" /><div id="newEmpInsurancePreview" class="ok">輸入薪資後會自動試算加班工資基礎；勞健保級距只看月薪/本薪。</div><button onclick="addEmployee()">新增員工</button></div></div><div class="card"><h2>員工列表</h2><div class="warn">點「編輯」可修改月薪、勞保、健保、眷屬健保、帳號密碼。</div><div id="employeeDebug" class="muted"></div><div id="employeeTable" class="scroll"></div></div>
 <div class="card hide" id="editEmployeeCard">
   <h2>編輯員工資料</h2>
   <input id="editEmpId" type="hidden" />
@@ -99,7 +99,7 @@ label{font-size:14px;font-weight:800;color:#334155}table{width:100%;border-colla
 <div class="ok">V22 薪資規則：加班費依 Excel「薪資表」公式自動計算。工資基礎＝本薪+伙食+職務+固定油資+固定績效+其他固定津貼；加班時薪＝工資基礎÷240，保留小數；核准加班依平日、休息日、國定假日、例假日分段倍率帶入。</div><div class="ok">勞保、本人健保、眷屬健保依「月薪/本薪」自動更新級距與扣款；伙食、職務與固定津貼只列入加班工資基礎，不列入投保級距。</div><div class="warn">如果員工下拉空白，請按「重新整理後台資料」或「補齊員工帳密」。</div><div class="grid grid3"><div><label>員工</label><select id="payEmpSelect" onchange="updatePayrollHourlyRate()"></select></div><div><label>月份</label><input id="payMonth" type="month" /></div><div><label>加班費</label><input id="payOvertime" type="number" value="0" /></div><div><label>加班時薪</label><input id="payHourlyRate" type="number" value="0" step="0.01" readonly /><div class="muted">依選取員工工資基礎自動換算</div></div><div><label>加班倍率</label><input id="payOtMultiplier" type="number" value="1.34" step="0.01" /></div><div><label>雜費補助/津貼</label><input id="payAllowance" type="number" value="0" /></div><div><label>年中獎金</label><input id="payMidBonus" type="number" value="0" /></div><div><label>年終獎金</label><input id="payYearBonus" type="number" value="0" /></div><div><label>三節獎金</label><input id="payFestivalBonus" type="number" value="0" /></div><div><label>浮動獎金</label><input id="payVariableBonus" type="number" value="0" /></div><div><label>其他不列入工資</label><input id="payOtherNonWage" type="number" value="0" /></div><div><label>其他扣款</label><input id="payDeductions" type="number" value="0" /></div>
 <div><label>事假扣薪比例</label><input id="payPersonalRate" type="number" value="1" step="0.01" /></div>
 <div><label>病假扣薪比例</label><input id="paySickRate" type="number" value="0.5" step="0.01" /></div></div><button class="btnGreen" onclick="autoCalculatePayroll()">自動計算薪資</button><div id="payrollCalcDetail" class="scroll"></div><button class="btn2" onclick="fillApprovedOvertimePay()">帶入核准加班費</button><button onclick="createPayroll()">手動產生薪資</button><button class="btn2" onclick="loadInsuranceTotals()">勞健保總額統計</button><div id="insuranceTotals" class="scroll"></div></div><div class="card"><h2>薪資紀錄</h2><div id="payrollTable" class="scroll"></div></div></section>
-<section id="page-install" class="page hide"><div class="card"><h1>手機安裝方式</h1><div class="grid grid2"><div><h2>Android</h2><ol class="muted"><li>用 Chrome 開啟本網址</li><li>點右上角選單</li><li>選「安裝應用程式」或「加入主畫面」</li></ol></div><div><h2>iPhone</h2><ol class="muted"><li>用 Safari 開啟本網址</li><li>點分享按鈕</li><li>選「加入主畫面」</li></ol></div></div><div class="warn">請不要用 LINE 內建瀏覽器安裝；打卡需要允許 GPS 與相機權限。</div></div></section><div id="versionInfoCard" class="wrap hide"><div class="card"><b>版本：</b>沛鴻 HR Web V23｜HR 後台固定登入框；手機/電腦登入穩定化；員工端仍隱藏版本資訊；保留 V22 薪資、保險、特休與員工資料欄位。</div></div></main>
+<section id="page-install" class="page hide"><div class="card"><h1>手機安裝方式</h1><div class="grid grid2"><div><h2>Android</h2><ol class="muted"><li>用 Chrome 開啟本網址</li><li>點右上角選單</li><li>選「安裝應用程式」或「加入主畫面」</li></ol></div><div><h2>iPhone</h2><ol class="muted"><li>用 Safari 開啟本網址</li><li>點分享按鈕</li><li>選「加入主畫面」</li></ol></div></div><div class="warn">請不要用 LINE 內建瀏覽器安裝；打卡需要允許 GPS 與相機權限。</div></div></section><div id="versionInfoCard" class="wrap hide"><div class="card"><b>版本：</b>沛鴻 HR Web V24｜HR 後台帳密可自行修改並儲存於 Supabase；固定登入框；員工端隱藏版本資訊；保留 V22/V23 薪資、保險、特休與員工資料欄位。</div></div></main>
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const supabase = createClient('https://mhsasrjpuottlmhsutnb.supabase.co', 'sb_publishable_2lGa4xcG6gxuFTYas0A0Bw_1I56RG5I');
@@ -109,6 +109,19 @@ const $=id=>document.getElementById(id);
 let currentHrOk = sessionStorage.getItem('peihong_hr_login') === '1';
 const HR_ADMIN_ACCOUNT = 'admin';
 const HR_ADMIN_PASSWORD = 'peihong2026';
+let hrAdminConfig = { account: HR_ADMIN_ACCOUNT, password: HR_ADMIN_PASSWORD };
+async function loadHrAdminConfig(){
+  try{
+    const r = await supabase.from('hr_settings').select('setting_key, setting_value').in('setting_key',['admin_account','admin_password']);
+    if(!r.error && Array.isArray(r.data)){
+      const map = Object.fromEntries(r.data.map(x=>[x.setting_key, x.setting_value]));
+      hrAdminConfig = { account: map.admin_account || HR_ADMIN_ACCOUNT, password: map.admin_password || HR_ADMIN_PASSWORD };
+    }
+  }catch(e){
+    hrAdminConfig = { account: HR_ADMIN_ACCOUNT, password: HR_ADMIN_PASSWORD };
+  }
+  return hrAdminConfig;
+}
 function ensureHrLoginBox(){
   const page = $('page-admin');
   if(!page || $('hrLoginBox')) return;
@@ -129,7 +142,7 @@ function ensureHrLoginBox(){
       </div>
     </div>
     <button class="btnGreen" onclick="hrLoginSubmit()">登入後台</button>
-    <div class="muted" style="margin-top:10px">預設帳號：admin</div>
+    <div class="muted" style="margin-top:10px">首次預設帳號：admin；密碼：peihong2026。登入後可在後台修改。</div>
   `;
   page.insertBefore(box, page.firstChild);
   ['hrLoginAccount','hrLoginPassword'].forEach(id=>{
@@ -148,7 +161,8 @@ function renderHrLoginState(){
 window.hrLoginSubmit = async function(){
   const acc = ($('hrLoginAccount')?.value || '').trim();
   const pw = ($('hrLoginPassword')?.value || '').trim();
-  if(acc === HR_ADMIN_ACCOUNT && pw === HR_ADMIN_PASSWORD){
+  await loadHrAdminConfig();
+  if(acc === hrAdminConfig.account && pw === hrAdminConfig.password){
     currentHrOk = true;
     sessionStorage.setItem('peihong_hr_login','1');
     sessionStorage.setItem('peihong_admin_ok','1');
@@ -305,12 +319,29 @@ function requireAdminPin(){
   msg('HR 後台密碼錯誤','bad');
   return false;
 }
-window.changeAdminPin = function(){
+window.changeAdminPin = async function(){
   if(!hrLoginPrompt()) return;
-  const next = prompt('請輸入新的 HR 後台密碼');
-  if(!next || next.length < 4) return msg('密碼至少 4 碼','bad');
-  localStorage.setItem('peihong_admin_pin', next);
-  msg('HR 後台密碼已更新');
+  await loadHrAdminConfig();
+  const oldPw = prompt('請輸入目前 HR 後台密碼');
+  if(oldPw !== hrAdminConfig.password) return msg('目前密碼錯誤，未修改','bad');
+  const nextAccount = prompt('請輸入新的 HR 帳號', hrAdminConfig.account || 'admin');
+  if(!nextAccount || nextAccount.trim().length < 3) return msg('帳號至少 3 碼','bad');
+  const nextPw = prompt('請輸入新的 HR 後台密碼（至少 6 碼）');
+  if(!nextPw || nextPw.length < 6) return msg('密碼至少 6 碼','bad');
+  const confirmPw = prompt('請再輸入一次新密碼');
+  if(nextPw !== confirmPw) return msg('兩次密碼不一致，未修改','bad');
+  const rows = [
+    {setting_key:'admin_account', setting_value: nextAccount.trim(), updated_at: new Date().toISOString()},
+    {setting_key:'admin_password', setting_value: nextPw, updated_at: new Date().toISOString()}
+  ];
+  const r = await supabase.from('hr_settings').upsert(rows, { onConflict: 'setting_key' });
+  if(r.error) return msg('後台帳密更新失敗：' + r.error.message + '。請先執行 V24 SQL。','bad');
+  hrAdminConfig = { account: nextAccount.trim(), password: nextPw };
+  sessionStorage.removeItem('peihong_hr_login');
+  sessionStorage.removeItem('peihong_admin_ok');
+  currentHrOk = false;
+  renderHrLoginState();
+  msg('HR 後台帳密已更新，請用新帳密重新登入。');
 }
 function csvDownload(filename, headers, rows){
   const csv = '\ufeff' + [headers, ...rows].map(row => row.map(v => `"${String(v ?? '').replaceAll('"','""')}"`).join(',')).join('\n');
