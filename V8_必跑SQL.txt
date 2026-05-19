@@ -1,0 +1,11 @@
+請到 Supabase SQL Editor 執行：
+
+alter table employees add column if not exists login_account text;
+alter table employees add column if not exists login_password text;
+
+update employees
+set
+  login_account = coalesce(login_account, employee_no),
+  login_password = coalesce(login_password, '123456');
+
+執行完成後再上傳/使用 V8。

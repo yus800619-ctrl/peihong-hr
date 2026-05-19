@@ -1,0 +1,11 @@
+沛鴻 HR Web V16｜安全修正版
+
+1. 保留 V15 Excel 薪資自動計算與薪資單/勞健保總額連動。
+2. 移除 V15 SQL 裡的 disable row level security。
+3. 員工密碼不再自動補成 123456。
+4. 新增 employee_login RPC，員工登入改用資料庫函式驗證。
+5. 後台「補齊員工帳密」改成只補登入帳號，不補預設密碼。
+6. 員工列表與匯出不再直接顯示明文密碼，只顯示已設定/未設定。
+7. 新增 V16_必跑SQL.txt。
+
+注意：目前系統仍是純前端 Netlify + Supabase publishable key 架構，若要正式高安全上線，建議下一版改成 Supabase Auth / Edge Function 權限架構。

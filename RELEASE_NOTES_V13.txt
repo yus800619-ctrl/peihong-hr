@@ -1,0 +1,13 @@
+沛鴻 HR Web V13
+
+修正：
+1. 員工端加班申請一定寫入 overtime_requests。
+2. 員工端可看到自己的加班申請紀錄。
+3. HR 後台加班審核表會顯示所有加班申請。
+4. HR 可核准 / 退回加班。
+5. 薪資「帶入核准加班費」會從 overtime_requests 抓 approved 資料。
+6. 自動計算薪資也會抓核准加班。
+
+重要：
+請先執行 V13_必跑SQL.txt。
+若沒有執行，網站會顯示 overtime_requests 不存在或讀取失敗。

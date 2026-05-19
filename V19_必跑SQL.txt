@@ -1,0 +1,221 @@
+-- V19：投保本薪版 + 保留加班工資基礎自動換算
+-- 規則：
+-- 1. 加班時薪 = (月薪/本薪 + 伙食津貼 + 職務加給 + 固定油資 + 固定績效 + 其他固定津貼) / 240
+-- 2. 勞保/健保投保級距 = 只看月薪/本薪 salary，不含任何津貼
+-- 3. 本人健保、眷屬健保、勞保扣款會在新增/修改員工薪資或眷屬人數時自動更新
+
+create extension if not exists "uuid-ossp";
+
+alter table employees add column if not exists meal_allowance numeric default 0;
+alter table employees add column if not exists position_allowance numeric default 0;
+alter table employees add column if not exists fixed_fuel_allowance numeric default 0;
+alter table employees add column if not exists fixed_performance_bonus numeric default 0;
+alter table employees add column if not exists other_fixed_allowance numeric default 0;
+alter table employees add column if not exists health_dependents_count numeric default 0;
+alter table employees add column if not exists labor_insured_salary numeric default 0;
+alter table employees add column if not exists health_insured_salary numeric default 0;
+alter table employees add column if not exists labor_insurance numeric default 0;
+alter table employees add column if not exists health_insurance numeric default 0;
+alter table employees add column if not exists dependent_health_insurance numeric default 0;
+
+create or replace function peihong_labor_insured_salary(p_salary numeric)
+returns numeric
+language plpgsql
+immutable
+as $$
+begin
+  if coalesce(p_salary,0) >= 43901 then return 45800;
+  elsif coalesce(p_salary,0) >= 42001 then return 43900;
+  elsif coalesce(p_salary,0) >= 40101 then return 42000;
+  elsif coalesce(p_salary,0) >= 38201 then return 40100;
+  elsif coalesce(p_salary,0) >= 36301 then return 38200;
+  elsif coalesce(p_salary,0) >= 34801 then return 36300;
+  elsif coalesce(p_salary,0) >= 33301 then return 34800;
+  elsif coalesce(p_salary,0) >= 31801 then return 33300;
+  elsif coalesce(p_salary,0) >= 30301 then return 31800;
+  elsif coalesce(p_salary,0) >= 29501 then return 30300;
+  else return 29500;
+  end if;
+end;
+$$;
+
+create or replace function peihong_health_insured_salary(p_salary numeric)
+returns numeric
+language plpgsql
+immutable
+as $$
+begin
+  if coalesce(p_salary,0) >= 101101 then return 105600;
+  elsif coalesce(p_salary,0) >= 96601 then return 101100;
+  elsif coalesce(p_salary,0) >= 92101 then return 96600;
+  elsif coalesce(p_salary,0) >= 87601 then return 92100;
+  elsif coalesce(p_salary,0) >= 83901 then return 87600;
+  elsif coalesce(p_salary,0) >= 80201 then return 83900;
+  elsif coalesce(p_salary,0) >= 76501 then return 80200;
+  elsif coalesce(p_salary,0) >= 72801 then return 76500;
+  elsif coalesce(p_salary,0) >= 69801 then return 72800;
+  elsif coalesce(p_salary,0) >= 66801 then return 69800;
+  elsif coalesce(p_salary,0) >= 63801 then return 66800;
+  elsif coalesce(p_salary,0) >= 60801 then return 63800;
+  elsif coalesce(p_salary,0) >= 57801 then return 60800;
+  elsif coalesce(p_salary,0) >= 55401 then return 57800;
+  elsif coalesce(p_salary,0) >= 53001 then return 55400;
+  elsif coalesce(p_salary,0) >= 50601 then return 53000;
+  elsif coalesce(p_salary,0) >= 48201 then return 50600;
+  elsif coalesce(p_salary,0) >= 45801 then return 48200;
+  elsif coalesce(p_salary,0) >= 43901 then return 45800;
+  elsif coalesce(p_salary,0) >= 42001 then return 43900;
+  elsif coalesce(p_salary,0) >= 40101 then return 42000;
+  elsif coalesce(p_salary,0) >= 38201 then return 40100;
+  elsif coalesce(p_salary,0) >= 36301 then return 38200;
+  elsif coalesce(p_salary,0) >= 34801 then return 36300;
+  elsif coalesce(p_salary,0) >= 33301 then return 34800;
+  elsif coalesce(p_salary,0) >= 31801 then return 33300;
+  elsif coalesce(p_salary,0) >= 30301 then return 31800;
+  elsif coalesce(p_salary,0) >= 29501 then return 30300;
+  else return 29500;
+  end if;
+end;
+$$;
+
+create or replace function peihong_employee_wage_base(
+  p_salary numeric,
+  p_meal numeric,
+  p_position numeric,
+  p_fuel numeric,
+  p_bonus numeric,
+  p_other numeric
+)
+returns numeric
+language sql
+immutable
+as $$
+  select
+    coalesce(p_salary,0)
+    + coalesce(p_meal,0)
+    + coalesce(p_position,0)
+    + coalesce(p_fuel,0)
+    + coalesce(p_bonus,0)
+    + coalesce(p_other,0);
+$$;
+
+create or replace function peihong_employee_overtime_hourly(
+  p_salary numeric,
+  p_meal numeric,
+  p_position numeric,
+  p_fuel numeric,
+  p_bonus numeric,
+  p_other numeric
+)
+returns numeric
+language sql
+immutable
+as $$
+  select round(
+    peihong_employee_wage_base(
+      p_salary,
+      p_meal,
+      p_position,
+      p_fuel,
+      p_bonus,
+      p_other
+    ) / 240,
+    2
+  );
+$$;
+
+create or replace function peihong_sync_employee_insurance()
+returns trigger
+language plpgsql
+as $$
+declare
+  insurance_base numeric;
+  dep_count numeric;
+  labor_grade numeric;
+  health_grade numeric;
+begin
+  -- V19：投保級距只看月薪/本薪 salary，不含任何津貼。
+  insurance_base := coalesce(new.salary,0);
+
+  dep_count := least(greatest(coalesce(new.health_dependents_count,0),0),3);
+  labor_grade := peihong_labor_insured_salary(insurance_base);
+  health_grade := peihong_health_insured_salary(insurance_base);
+
+  new.labor_insured_salary := labor_grade;
+  new.health_insured_salary := health_grade;
+  new.labor_insurance := round(labor_grade * 0.125 * 0.2);
+  new.health_insurance := round(health_grade * 0.0517 * 0.3);
+  new.dependent_health_insurance := round(health_grade * 0.0517 * 0.3 * dep_count);
+  new.health_dependents_count := dep_count;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_peihong_sync_employee_insurance on employees;
+
+create trigger trg_peihong_sync_employee_insurance
+before insert or update of salary, health_dependents_count
+on employees
+for each row
+execute function peihong_sync_employee_insurance();
+
+-- 保留刪除功能權限
+alter table employees enable row level security;
+alter table attendance enable row level security;
+alter table leave_requests enable row level security;
+alter table overtime_requests enable row level security;
+alter table payroll enable row level security;
+
+drop policy if exists peihong_v18_employees_delete on employees;
+create policy peihong_v18_employees_delete on employees for delete to anon, authenticated using (true);
+
+drop policy if exists peihong_v18_attendance_delete on attendance;
+create policy peihong_v18_attendance_delete on attendance for delete to anon, authenticated using (true);
+
+drop policy if exists peihong_v18_leave_delete on leave_requests;
+create policy peihong_v18_leave_delete on leave_requests for delete to anon, authenticated using (true);
+
+drop policy if exists peihong_v18_overtime_delete on overtime_requests;
+create policy peihong_v18_overtime_delete on overtime_requests for delete to anon, authenticated using (true);
+
+drop policy if exists peihong_v18_payroll_delete on payroll;
+create policy peihong_v18_payroll_delete on payroll for delete to anon, authenticated using (true);
+
+-- 重新整理既有員工資料，讓所有投保級距立即改成只看本薪
+update employees
+set salary = coalesce(salary,0),
+    meal_allowance = coalesce(meal_allowance,0),
+    position_allowance = coalesce(position_allowance,0),
+    fixed_fuel_allowance = coalesce(fixed_fuel_allowance,0),
+    fixed_performance_bonus = coalesce(fixed_performance_bonus,0),
+    other_fixed_allowance = coalesce(other_fixed_allowance,0),
+    health_dependents_count = coalesce(health_dependents_count,0);
+
+select
+  employee_no,
+  name,
+  salary as insurance_base_salary,
+  peihong_employee_wage_base(
+    salary,
+    meal_allowance,
+    position_allowance,
+    fixed_fuel_allowance,
+    fixed_performance_bonus,
+    other_fixed_allowance
+  ) as overtime_wage_base_total,
+  peihong_employee_overtime_hourly(
+    salary,
+    meal_allowance,
+    position_allowance,
+    fixed_fuel_allowance,
+    fixed_performance_bonus,
+    other_fixed_allowance
+  ) as overtime_hourly_rate,
+  labor_insured_salary,
+  health_insured_salary,
+  labor_insurance,
+  health_insurance,
+  dependent_health_insurance
+from employees
+order by employee_no;

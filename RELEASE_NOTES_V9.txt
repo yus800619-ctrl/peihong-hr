@@ -1,0 +1,9 @@
+沛鴻 HR Web V9
+
+修正：
+1. 員工登入改為直接查 Supabase employees。
+2. 支援帳號=login_account 或 employee_no。
+3. 舊員工密碼預設 123456。
+4. HR 後台新增「補齊員工帳密」按鈕。
+5. 薪資員工下拉清單強制重新載入。
+6. 員工清單不再因 is_active null 造成不顯示。

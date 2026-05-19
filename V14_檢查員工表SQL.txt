@@ -1,0 +1,9 @@
+如果 V14 上傳後仍然沒有員工，請到 Supabase SQL Editor 跑：
+
+select id, employee_no, name, login_account, login_password, salary, is_active
+from employees
+order by employee_no;
+
+如果查不到資料，代表 employees 表沒有員工，請在 HR 後台新增。
+如果查得到資料但網站看不到，請確認：
+alter table employees disable row level security;

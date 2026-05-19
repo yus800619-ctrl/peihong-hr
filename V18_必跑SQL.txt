@@ -1,0 +1,39 @@
+-- V18：刪除功能與薪資自動時薪權限補強
+-- 用途：允許 HR 後台刪除員工、出勤、請假、加班、薪資紀錄。
+-- 注意：此版本前端會在刪除員工前先刪除該員工相關紀錄，避免外鍵限制造成刪除失敗。
+
+alter table employees enable row level security;
+alter table attendance enable row level security;
+alter table leave_requests enable row level security;
+alter table overtime_requests enable row level security;
+alter table payroll enable row level security;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='employees' AND policyname='peihong_v18_employees_delete') THEN
+    CREATE POLICY peihong_v18_employees_delete ON employees FOR DELETE TO anon, authenticated USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='attendance' AND policyname='peihong_v18_attendance_delete') THEN
+    CREATE POLICY peihong_v18_attendance_delete ON attendance FOR DELETE TO anon, authenticated USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='leave_requests' AND policyname='peihong_v18_leave_delete') THEN
+    CREATE POLICY peihong_v18_leave_delete ON leave_requests FOR DELETE TO anon, authenticated USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='overtime_requests' AND policyname='peihong_v18_overtime_delete') THEN
+    CREATE POLICY peihong_v18_overtime_delete ON overtime_requests FOR DELETE TO anon, authenticated USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='payroll' AND policyname='peihong_v18_payroll_delete') THEN
+    CREATE POLICY peihong_v18_payroll_delete ON payroll FOR DELETE TO anon, authenticated USING (true);
+  END IF;
+END $$;
+
+-- 確認目前資料量
+select 'employees' as table_name, count(*) as rows from employees
+union all
+select 'attendance', count(*) from attendance
+union all
+select 'leave_requests', count(*) from leave_requests
+union all
+select 'overtime_requests', count(*) from overtime_requests
+union all
+select 'payroll', count(*) from payroll;

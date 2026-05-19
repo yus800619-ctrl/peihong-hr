@@ -1,0 +1,15 @@
+請到 Supabase SQL Editor 執行：
+
+create table if not exists overtime_requests (
+  id uuid primary key default uuid_generate_v4(),
+  employee_id uuid references employees(id) on delete cascade,
+  overtime_date date not null,
+  start_time time not null,
+  end_time time not null,
+  overtime_hours numeric default 0,
+  reason text,
+  status text default 'pending',
+  created_at timestamp default now()
+);
+
+alter table overtime_requests disable row level security;

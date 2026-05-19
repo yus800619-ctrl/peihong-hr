@@ -1,0 +1,198 @@
+請到 Supabase SQL Editor 執行本檔，執行後再上傳 V16 到 Netlify。
+
+-- V16：安全修正版
+-- 重點：保留 Excel 薪資欄位與連動，不再自動把員工密碼補成 123456，也不再 disable row level security。
+
+create extension if not exists "uuid-ossp";
+
+-- 1) 員工資料：補上 Excel 薪資基礎欄位與登入欄位
+alter table employees add column if not exists meal_allowance numeric default 0;
+alter table employees add column if not exists position_allowance numeric default 0;
+alter table employees add column if not exists fixed_fuel_allowance numeric default 0;
+alter table employees add column if not exists fixed_performance_bonus numeric default 0;
+alter table employees add column if not exists other_fixed_allowance numeric default 0;
+alter table employees add column if not exists health_dependents_count numeric default 0;
+alter table employees add column if not exists labor_insured_salary numeric default 0;
+alter table employees add column if not exists health_insured_salary numeric default 0;
+alter table employees add column if not exists login_account text;
+alter table employees add column if not exists login_password text;
+alter table employees add column if not exists is_active boolean default true;
+
+-- 只補帳號，不補預設密碼。密碼請在 HR 後台逐一設定。
+update employees
+set
+  login_account = coalesce(nullif(login_account, ''), employee_no),
+  meal_allowance = coalesce(meal_allowance, 0),
+  position_allowance = coalesce(position_allowance, 0),
+  fixed_fuel_allowance = coalesce(fixed_fuel_allowance, 0),
+  fixed_performance_bonus = coalesce(fixed_performance_bonus, 0),
+  other_fixed_allowance = coalesce(other_fixed_allowance, 0),
+  health_dependents_count = coalesce(health_dependents_count, 0),
+  labor_insured_salary = coalesce(labor_insured_salary, 0),
+  health_insured_salary = coalesce(health_insured_salary, 0),
+  is_active = coalesce(is_active, true);
+
+create index if not exists employees_login_account_idx on employees(login_account);
+create index if not exists employees_employee_no_idx on employees(employee_no);
+
+-- 2) 加班申請：補上 Excel 加班類型
+create table if not exists overtime_requests (
+  id uuid primary key default uuid_generate_v4(),
+  employee_id uuid references employees(id) on delete cascade,
+  overtime_date date not null,
+  start_time time not null,
+  end_time time not null,
+  overtime_hours numeric default 0,
+  overtime_type text default 'weekday_first2',
+  reason text,
+  status text default 'pending',
+  created_at timestamp default now()
+);
+alter table overtime_requests add column if not exists overtime_type text default 'weekday_first2';
+alter table overtime_requests add column if not exists reviewed_at timestamp;
+alter table overtime_requests add column if not exists reviewed_by text;
+
+-- 3) 請假欄位保險補齊
+alter table leave_requests add column if not exists status text default 'pending';
+alter table leave_requests add column if not exists reviewed_at timestamp;
+alter table leave_requests add column if not exists reviewed_by text;
+
+-- 4) 薪資表：若不存在則建立，並補上 Excel 計算結果欄位
+create table if not exists payroll (
+  id uuid primary key default uuid_generate_v4(),
+  employee_id uuid references employees(id) on delete cascade,
+  payroll_month text not null,
+  base_salary numeric default 0,
+  overtime_pay numeric default 0,
+  allowance numeric default 0,
+  deductions numeric default 0,
+  labor_insurance numeric default 0,
+  health_insurance numeric default 0,
+  dependent_health_insurance numeric default 0,
+  net_salary numeric default 0,
+  created_at timestamp default now()
+);
+
+alter table payroll add column if not exists wage_base_total numeric default 0;
+alter table payroll add column if not exists overtime_hourly_rate numeric default 0;
+alter table payroll add column if not exists weekday_overtime_pay numeric default 0;
+alter table payroll add column if not exists restday_overtime_pay numeric default 0;
+alter table payroll add column if not exists holiday_overtime_pay numeric default 0;
+alter table payroll add column if not exists regular_holiday_overtime_pay numeric default 0;
+alter table payroll add column if not exists gross_salary numeric default 0;
+alter table payroll add column if not exists deduction_total numeric default 0;
+alter table payroll add column if not exists labor_insured_salary numeric default 0;
+alter table payroll add column if not exists health_insured_salary numeric default 0;
+alter table payroll add column if not exists health_dependents_count numeric default 0;
+alter table payroll add column if not exists employee_health_total numeric default 0;
+alter table payroll add column if not exists company_labor_insurance numeric default 0;
+alter table payroll add column if not exists company_health_insurance numeric default 0;
+alter table payroll add column if not exists company_pension numeric default 0;
+alter table payroll add column if not exists company_total_cost numeric default 0;
+alter table payroll add column if not exists payroll_detail jsonb;
+
+-- 5) 安全登入 RPC：員工登入不再需要前端直接讀全部密碼
+create or replace function employee_login(p_account text, p_password text)
+returns setof employees
+language sql
+security definer
+set search_path = public
+as $$
+  select *
+  from employees
+  where is_active is not false
+    and (login_account = p_account or employee_no = p_account)
+    and coalesce(login_password, '') = p_password
+  limit 1;
+$$;
+
+grant execute on function employee_login(text, text) to anon, authenticated;
+
+-- 6) RLS：不關閉 RLS，改為明確建立政策。
+-- 注意：目前此系統是純 Netlify 前端 + Supabase publishable key，沒有真正的 Supabase Auth 使用者。
+-- 因此前端 HR 後台仍需讀寫資料；這是「可運作的明確政策」，比直接 disable RLS 好管理，但若要正式高安全上線，建議再升級成 Supabase Auth + Edge Function。
+
+alter table employees enable row level security;
+alter table attendance enable row level security;
+alter table leave_requests enable row level security;
+alter table overtime_requests enable row level security;
+alter table payroll enable row level security;
+
+-- employees policies
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='employees' AND policyname='peihong_v16_employees_select') THEN
+    CREATE POLICY peihong_v16_employees_select ON employees FOR SELECT TO anon, authenticated USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='employees' AND policyname='peihong_v16_employees_insert') THEN
+    CREATE POLICY peihong_v16_employees_insert ON employees FOR INSERT TO anon, authenticated WITH CHECK (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='employees' AND policyname='peihong_v16_employees_update') THEN
+    CREATE POLICY peihong_v16_employees_update ON employees FOR UPDATE TO anon, authenticated USING (true) WITH CHECK (true);
+  END IF;
+END $$;
+
+-- attendance policies
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='attendance' AND policyname='peihong_v16_attendance_select') THEN
+    CREATE POLICY peihong_v16_attendance_select ON attendance FOR SELECT TO anon, authenticated USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='attendance' AND policyname='peihong_v16_attendance_insert') THEN
+    CREATE POLICY peihong_v16_attendance_insert ON attendance FOR INSERT TO anon, authenticated WITH CHECK (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='attendance' AND policyname='peihong_v16_attendance_update') THEN
+    CREATE POLICY peihong_v16_attendance_update ON attendance FOR UPDATE TO anon, authenticated USING (true) WITH CHECK (true);
+  END IF;
+END $$;
+
+-- leave_requests policies
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='leave_requests' AND policyname='peihong_v16_leave_select') THEN
+    CREATE POLICY peihong_v16_leave_select ON leave_requests FOR SELECT TO anon, authenticated USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='leave_requests' AND policyname='peihong_v16_leave_insert') THEN
+    CREATE POLICY peihong_v16_leave_insert ON leave_requests FOR INSERT TO anon, authenticated WITH CHECK (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='leave_requests' AND policyname='peihong_v16_leave_update') THEN
+    CREATE POLICY peihong_v16_leave_update ON leave_requests FOR UPDATE TO anon, authenticated USING (true) WITH CHECK (true);
+  END IF;
+END $$;
+
+-- overtime_requests policies
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='overtime_requests' AND policyname='peihong_v16_overtime_select') THEN
+    CREATE POLICY peihong_v16_overtime_select ON overtime_requests FOR SELECT TO anon, authenticated USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='overtime_requests' AND policyname='peihong_v16_overtime_insert') THEN
+    CREATE POLICY peihong_v16_overtime_insert ON overtime_requests FOR INSERT TO anon, authenticated WITH CHECK (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='overtime_requests' AND policyname='peihong_v16_overtime_update') THEN
+    CREATE POLICY peihong_v16_overtime_update ON overtime_requests FOR UPDATE TO anon, authenticated USING (true) WITH CHECK (true);
+  END IF;
+END $$;
+
+-- payroll policies
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='payroll' AND policyname='peihong_v16_payroll_select') THEN
+    CREATE POLICY peihong_v16_payroll_select ON payroll FOR SELECT TO anon, authenticated USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='payroll' AND policyname='peihong_v16_payroll_insert') THEN
+    CREATE POLICY peihong_v16_payroll_insert ON payroll FOR INSERT TO anon, authenticated WITH CHECK (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='payroll' AND policyname='peihong_v16_payroll_update') THEN
+    CREATE POLICY peihong_v16_payroll_update ON payroll FOR UPDATE TO anon, authenticated USING (true) WITH CHECK (true);
+  END IF;
+END $$;
+
+-- 7) 檢查
+select 'employees' as table_name, count(*) as rows from employees
+union all
+select 'payroll', count(*) from payroll
+union all
+select 'overtime_requests', count(*) from overtime_requests
+union all
+select 'leave_requests', count(*) from leave_requests;

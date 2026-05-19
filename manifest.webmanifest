@@ -1,0 +1,13 @@
+{
+  "name": "沛鴻 HR 出勤薪資系統",
+  "short_name": "沛鴻HR",
+  "description": "沛鴻聚合工程有限公司手機打卡、請假、薪資與勞健保系統",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f1f5f9",
+  "theme_color": "#0f172a",
+  "lang": "zh-TW",
+  "icons": []
+}

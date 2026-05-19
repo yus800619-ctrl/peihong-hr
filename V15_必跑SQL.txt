@@ -1,0 +1,78 @@
+請到 Supabase SQL Editor 執行本檔，執行後再上傳 V15 到 Netlify。
+
+-- V15：Excel 薪資項目與連動欄位
+create extension if not exists "uuid-ossp";
+
+-- 員工資料：補上 Excel 薪資基礎欄位
+alter table employees add column if not exists meal_allowance numeric default 0;
+alter table employees add column if not exists position_allowance numeric default 0;
+alter table employees add column if not exists fixed_fuel_allowance numeric default 0;
+alter table employees add column if not exists fixed_performance_bonus numeric default 0;
+alter table employees add column if not exists other_fixed_allowance numeric default 0;
+alter table employees add column if not exists health_dependents_count numeric default 0;
+alter table employees add column if not exists labor_insured_salary numeric default 0;
+alter table employees add column if not exists health_insured_salary numeric default 0;
+alter table employees add column if not exists login_account text;
+alter table employees add column if not exists login_password text;
+alter table employees add column if not exists is_active boolean default true;
+
+update employees
+set
+  login_account = coalesce(login_account, employee_no),
+  login_password = coalesce(login_password, '123456'),
+  meal_allowance = coalesce(meal_allowance, 0),
+  position_allowance = coalesce(position_allowance, 0),
+  fixed_fuel_allowance = coalesce(fixed_fuel_allowance, 0),
+  fixed_performance_bonus = coalesce(fixed_performance_bonus, 0),
+  other_fixed_allowance = coalesce(other_fixed_allowance, 0),
+  health_dependents_count = coalesce(health_dependents_count, 0),
+  labor_insured_salary = coalesce(labor_insured_salary, 0),
+  health_insured_salary = coalesce(health_insured_salary, 0),
+  is_active = coalesce(is_active, true);
+
+-- 加班申請：補上 Excel 加班類型
+create table if not exists overtime_requests (
+  id uuid primary key default uuid_generate_v4(),
+  employee_id uuid references employees(id) on delete cascade,
+  overtime_date date not null,
+  start_time time not null,
+  end_time time not null,
+  overtime_hours numeric default 0,
+  overtime_type text default 'weekday_first2',
+  reason text,
+  status text default 'pending',
+  created_at timestamp default now()
+);
+alter table overtime_requests add column if not exists overtime_type text default 'weekday_first2';
+
+-- 薪資表：補上 Excel 計算結果欄位
+alter table payroll add column if not exists wage_base_total numeric default 0;
+alter table payroll add column if not exists overtime_hourly_rate numeric default 0;
+alter table payroll add column if not exists weekday_overtime_pay numeric default 0;
+alter table payroll add column if not exists restday_overtime_pay numeric default 0;
+alter table payroll add column if not exists holiday_overtime_pay numeric default 0;
+alter table payroll add column if not exists regular_holiday_overtime_pay numeric default 0;
+alter table payroll add column if not exists gross_salary numeric default 0;
+alter table payroll add column if not exists deduction_total numeric default 0;
+alter table payroll add column if not exists labor_insured_salary numeric default 0;
+alter table payroll add column if not exists health_insured_salary numeric default 0;
+alter table payroll add column if not exists health_dependents_count numeric default 0;
+alter table payroll add column if not exists employee_health_total numeric default 0;
+alter table payroll add column if not exists company_labor_insurance numeric default 0;
+alter table payroll add column if not exists company_health_insurance numeric default 0;
+alter table payroll add column if not exists company_pension numeric default 0;
+alter table payroll add column if not exists company_total_cost numeric default 0;
+alter table payroll add column if not exists payroll_detail jsonb;
+
+alter table employees disable row level security;
+alter table attendance disable row level security;
+alter table leave_requests disable row level security;
+alter table overtime_requests disable row level security;
+alter table payroll disable row level security;
+
+-- 檢查
+select 'employees' as table_name, count(*) as rows from employees
+union all
+select 'payroll', count(*) from payroll
+union all
+select 'overtime_requests', count(*) from overtime_requests;
