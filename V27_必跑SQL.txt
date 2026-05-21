@@ -1,0 +1,241 @@
+-- V27：加班進位 + 員工資料儲存欄位補齊
+-- 1) 加班從 17:00 後起算，未滿或等於30分鐘以0.5小時計，超過30分鐘進位到下一小時
+--    例：17:01~17:30 = 0.5 小時；17:31~18:00 = 1 小時
+-- 2) 補齊員工編輯儲存會用到的欄位與權限
+
+create extension if not exists "uuid-ossp";
+
+-- 員工資料欄位完整補齊
+alter table employees add column if not exists employee_no text;
+alter table employees add column if not exists name text;
+alter table employees add column if not exists department text;
+alter table employees add column if not exists position text;
+alter table employees add column if not exists job_grade text;
+alter table employees add column if not exists marital_status text;
+alter table employees add column if not exists national_id text;
+alter table employees add column if not exists address text;
+alter table employees add column if not exists phone text;
+
+alter table employees add column if not exists emergency_contact text;
+alter table employees add column if not exists emergency_contact_name text;
+alter table employees add column if not exists emergency_contact_phone text;
+
+alter table employees add column if not exists bank_name text;
+alter table employees add column if not exists bank_code text;
+alter table employees add column if not exists bank_account text;
+alter table employees add column if not exists bank_card_number text;
+alter table employees add column if not exists bank_card_no text;
+
+alter table employees add column if not exists hire_date date;
+alter table employees add column if not exists termination_date date;
+alter table employees add column if not exists annual_leave_total numeric default 0;
+alter table employees add column if not exists annual_leave_used numeric default 0;
+alter table employees add column if not exists annual_leave_remaining numeric default 0;
+alter table employees add column if not exists annual_leave_expire_date date;
+
+alter table employees add column if not exists login_account text;
+alter table employees add column if not exists login_password text;
+alter table employees add column if not exists is_active boolean default true;
+
+alter table employees add column if not exists salary numeric default 0;
+alter table employees add column if not exists labor_insured_salary numeric default 0;
+alter table employees add column if not exists health_insured_salary numeric default 0;
+alter table employees add column if not exists insurance_manual_override boolean default false;
+alter table employees add column if not exists meal_allowance numeric default 0;
+alter table employees add column if not exists position_allowance numeric default 0;
+alter table employees add column if not exists fixed_fuel_allowance numeric default 0;
+alter table employees add column if not exists fixed_performance_bonus numeric default 0;
+alter table employees add column if not exists other_fixed_allowance numeric default 0;
+alter table employees add column if not exists labor_insurance numeric default 0;
+alter table employees add column if not exists health_insurance numeric default 0;
+alter table employees add column if not exists health_dependents_count numeric default 0;
+alter table employees add column if not exists dependent_health_insurance numeric default 0;
+
+update employees
+set
+  bank_card_number = coalesce(bank_card_number, bank_card_no),
+  bank_card_no = coalesce(bank_card_no, bank_card_number),
+  emergency_contact = coalesce(emergency_contact, emergency_contact_name),
+  emergency_contact_name = coalesce(emergency_contact_name, emergency_contact),
+  salary = coalesce(salary,0),
+  labor_insured_salary = coalesce(labor_insured_salary,0),
+  health_insured_salary = coalesce(health_insured_salary,0),
+  meal_allowance = coalesce(meal_allowance,0),
+  position_allowance = coalesce(position_allowance,0),
+  fixed_fuel_allowance = coalesce(fixed_fuel_allowance,0),
+  fixed_performance_bonus = coalesce(fixed_performance_bonus,0),
+  other_fixed_allowance = coalesce(other_fixed_allowance,0),
+  labor_insurance = coalesce(labor_insurance,0),
+  health_insurance = coalesce(health_insurance,0),
+  health_dependents_count = coalesce(health_dependents_count,0),
+  dependent_health_insurance = coalesce(dependent_health_insurance,0),
+  annual_leave_total = coalesce(annual_leave_total,0),
+  annual_leave_used = coalesce(annual_leave_used,0),
+  annual_leave_remaining = greatest(coalesce(annual_leave_total,0)-coalesce(annual_leave_used,0),0),
+  insurance_manual_override = coalesce(insurance_manual_override,false),
+  is_active = coalesce(is_active,true);
+
+-- 加班欄位完整補齊
+create table if not exists overtime_requests (
+  id uuid primary key default uuid_generate_v4(),
+  employee_id uuid references employees(id) on delete cascade,
+  overtime_date date not null,
+  start_time time,
+  end_time time,
+  overtime_hours numeric default 0,
+  overtime_type text default 'auto',
+  overtime_day_type text default 'weekday',
+  overtime_breakdown jsonb default '{}'::jsonb,
+  reason text,
+  status text default 'pending',
+  reviewed_at timestamp,
+  reviewed_by text,
+  created_at timestamp default now()
+);
+
+alter table overtime_requests add column if not exists overtime_breakdown jsonb default '{}'::jsonb;
+alter table overtime_requests add column if not exists overtime_day_type text default 'weekday';
+alter table overtime_requests add column if not exists day_type text default 'weekday';
+alter table overtime_requests add column if not exists start_time time;
+alter table overtime_requests add column if not exists end_time time;
+alter table overtime_requests add column if not exists overtime_start time;
+alter table overtime_requests add column if not exists overtime_end time;
+alter table overtime_requests add column if not exists overtime_hours numeric default 0;
+alter table overtime_requests add column if not exists total_hours numeric default 0;
+alter table overtime_requests add column if not exists calculated_hours numeric default 0;
+alter table overtime_requests add column if not exists overtime_type text default 'auto';
+alter table overtime_requests add column if not exists weekday_first2_hours numeric default 0;
+alter table overtime_requests add column if not exists weekday_after2_hours numeric default 0;
+alter table overtime_requests add column if not exists restday_first2_hours numeric default 0;
+alter table overtime_requests add column if not exists restday_3to8_hours numeric default 0;
+alter table overtime_requests add column if not exists restday_9to12_hours numeric default 0;
+alter table overtime_requests add column if not exists holiday_hours numeric default 0;
+alter table overtime_requests add column if not exists regular_holiday_hours numeric default 0;
+alter table overtime_requests add column if not exists overtime_pay numeric default 0;
+alter table overtime_requests add column if not exists calculated_pay numeric default 0;
+alter table overtime_requests add column if not exists reason text;
+alter table overtime_requests add column if not exists status text default 'pending';
+alter table overtime_requests add column if not exists reviewed_at timestamp;
+alter table overtime_requests add column if not exists reviewed_by text;
+alter table overtime_requests add column if not exists created_at timestamp default now();
+
+-- 進位規則：以0.5小時為單位向上進位
+create or replace function peihong_round_up_half_hour_v27(p_hours numeric)
+returns numeric
+language sql
+immutable
+as $$
+  select greatest(ceil(coalesce(p_hours,0) * 2) / 2, 0);
+$$;
+
+create or replace function peihong_overtime_hours_after_17_v27(p_start time, p_end time)
+returns numeric
+language plpgsql
+immutable
+as $$
+declare
+  s interval;
+  e interval;
+  base interval := interval '17 hours';
+  diff_hours numeric;
+begin
+  if p_start is null or p_end is null then return 0; end if;
+  s := p_start - time '00:00';
+  e := p_end - time '00:00';
+  if s < base then s := base; end if;
+  if e <= s then return 0; end if;
+  diff_hours := extract(epoch from (e - s)) / 3600.0;
+  return peihong_round_up_half_hour_v27(diff_hours);
+end;
+$$;
+
+create or replace function peihong_sync_overtime_breakdown_v27()
+returns trigger
+language plpgsql
+as $$
+declare
+  hrs numeric;
+  d_type text;
+begin
+  hrs := peihong_overtime_hours_after_17_v27(coalesce(new.start_time,new.overtime_start), coalesce(new.end_time,new.overtime_end));
+  d_type := coalesce(new.overtime_day_type, new.day_type, 'weekday');
+
+  new.overtime_hours := hrs;
+  new.total_hours := hrs;
+  new.calculated_hours := hrs;
+  new.overtime_day_type := d_type;
+  new.day_type := d_type;
+  new.start_time := coalesce(new.start_time,new.overtime_start);
+  new.end_time := coalesce(new.end_time,new.overtime_end);
+  new.overtime_start := coalesce(new.overtime_start,new.start_time);
+  new.overtime_end := coalesce(new.overtime_end,new.end_time);
+
+  new.weekday_first2_hours := 0;
+  new.weekday_after2_hours := 0;
+  new.restday_first2_hours := 0;
+  new.restday_3to8_hours := 0;
+  new.restday_9to12_hours := 0;
+  new.holiday_hours := 0;
+  new.regular_holiday_hours := 0;
+
+  if d_type = 'weekday' then
+    new.weekday_first2_hours := least(hrs, 2);
+    new.weekday_after2_hours := greatest(hrs - 2, 0);
+    new.overtime_breakdown := jsonb_build_object('weekday_first2', new.weekday_first2_hours, 'weekday_after2', new.weekday_after2_hours);
+  elsif d_type = 'rest_day' or d_type = 'restday' then
+    new.restday_first2_hours := least(hrs, 2);
+    new.restday_3to8_hours := least(greatest(hrs - 2, 0), 6);
+    new.restday_9to12_hours := greatest(hrs - 8, 0);
+    new.overtime_breakdown := jsonb_build_object('rest_first2', new.restday_first2_hours, 'rest_3to8', new.restday_3to8_hours, 'rest_9to12', new.restday_9to12_hours);
+  elsif d_type = 'national_holiday' or d_type = 'holiday' then
+    new.holiday_hours := hrs;
+    new.overtime_breakdown := jsonb_build_object('holiday_within8', least(hrs,8), 'holiday_after8_first2', least(greatest(hrs-8,0),2), 'holiday_after8_after2', greatest(hrs-10,0));
+  elsif d_type = 'regular_holiday' then
+    new.regular_holiday_hours := hrs;
+    new.overtime_breakdown := jsonb_build_object('regular_emergency', least(hrs,8), 'regular_after8_first2', least(greatest(hrs-8,0),2), 'regular_after8_after2', greatest(hrs-10,0));
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_peihong_sync_overtime_breakdown_v26 on overtime_requests;
+drop trigger if exists trg_peihong_sync_overtime_breakdown_v27 on overtime_requests;
+
+create trigger trg_peihong_sync_overtime_breakdown_v27
+before insert or update of start_time, end_time, overtime_start, overtime_end, overtime_day_type, day_type
+on overtime_requests
+for each row
+execute function peihong_sync_overtime_breakdown_v27();
+
+alter table employees enable row level security;
+alter table overtime_requests enable row level security;
+
+drop policy if exists peihong_v27_employees_select on employees;
+create policy peihong_v27_employees_select on employees for select to anon, authenticated using (true);
+drop policy if exists peihong_v27_employees_insert on employees;
+create policy peihong_v27_employees_insert on employees for insert to anon, authenticated with check (true);
+drop policy if exists peihong_v27_employees_update on employees;
+create policy peihong_v27_employees_update on employees for update to anon, authenticated using (true) with check (true);
+drop policy if exists peihong_v27_employees_delete on employees;
+create policy peihong_v27_employees_delete on employees for delete to anon, authenticated using (true);
+
+drop policy if exists peihong_v27_overtime_select on overtime_requests;
+create policy peihong_v27_overtime_select on overtime_requests for select to anon, authenticated using (true);
+drop policy if exists peihong_v27_overtime_insert on overtime_requests;
+create policy peihong_v27_overtime_insert on overtime_requests for insert to anon, authenticated with check (true);
+drop policy if exists peihong_v27_overtime_update on overtime_requests;
+create policy peihong_v27_overtime_update on overtime_requests for update to anon, authenticated using (true) with check (true);
+drop policy if exists peihong_v27_overtime_delete on overtime_requests;
+create policy peihong_v27_overtime_delete on overtime_requests for delete to anon, authenticated using (true);
+
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on employees to anon, authenticated;
+grant select, insert, update, delete on overtime_requests to anon, authenticated;
+
+notify pgrst, 'reload schema';
+
+select
+  'V27 OK' as status,
+  (select count(*) from information_schema.columns where table_name='employees' and column_name='insurance_manual_override') as employee_save_column_ok,
+  (select count(*) from information_schema.columns where table_name='overtime_requests' and column_name='overtime_breakdown') as overtime_column_ok;
