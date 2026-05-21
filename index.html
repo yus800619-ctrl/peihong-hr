@@ -16,7 +16,7 @@ label{font-size:14px;font-weight:800;color:#334155}table{width:100%;border-colla
 @media(max-width:700px){.nav{align-items:flex-start}h1{font-size:26px}.wrap{padding:10px}.card{padding:16px;border-radius:20px}}
 </style></head><body>
 <div id="versionTopBanner" class="hide" style="background:#16a34a;color:white;font-weight:900;text-align:center;padding:14px;font-size:20px;">
-  沛鴻 HR Web V22｜員工端隱藏版本資訊＋本薪投保＋特休期限版
+  沛鴻 HR Web V29｜手動投保儲存＋加班滿30分鐘進位版
 </div>
 
 
@@ -98,7 +98,7 @@ label{font-size:14px;font-weight:800;color:#334155}table{width:100%;border-colla
   <button onclick="saveEmployeeEdit()">儲存員工資料</button>
   <button class="btn2" onclick="cancelEmployeeEdit()">取消</button>
 </div><div class="card"><h2>出勤紀錄</h2><div id="attendanceTable" class="scroll"></div></div><div class="card"><h2>請假審核</h2><div id="leaveTable" class="scroll"></div></div><div class="card"><h2>加班審核</h2><div id="overtimeTable" class="scroll"></div></div><div class="card"><h2>產生薪資</h2>
-<div class="ok">V27 薪資規則：員工加班單只填日期、開始時間、結束時間與原因；系統依 09:00–17:00 表定工時、17:00 後起算、0.5 小時計，自動拆分平日前2小時/後續小時。HR 可於加班審核表調整當日類型為平日、休息日、國定假日、例假日。</div><div class="ok">勞保、健保投保金額可自動試算，也可由 HR 手動輸入投保金額；手動輸入後系統依手動投保金額計算扣款。</div><div class="warn">如果員工下拉空白，請按「重新整理後台資料」或「補齊員工帳密」。</div><div class="grid grid3"><div><label>員工</label><select id="payEmpSelect" onchange="updatePayrollHourlyRate()"></select></div><div><label>月份</label><input id="payMonth" type="month" /></div><div><label>加班費</label><input id="payOvertime" type="number" value="0" /></div><div><label>加班時薪</label><input id="payHourlyRate" type="number" value="0" step="0.01" readonly /><div class="muted">依選取員工工資基礎自動換算</div></div><div><label>加班倍率</label><input id="payOtMultiplier" type="number" value="1.34" step="0.01" /></div><div><label>雜費補助/津貼</label><input id="payAllowance" type="number" value="0" /></div><div><label>年中獎金</label><input id="payMidBonus" type="number" value="0" /></div><div><label>年終獎金</label><input id="payYearBonus" type="number" value="0" /></div><div><label>三節獎金</label><input id="payFestivalBonus" type="number" value="0" /></div><div><label>浮動獎金</label><input id="payVariableBonus" type="number" value="0" /></div><div><label>其他不列入工資</label><input id="payOtherNonWage" type="number" value="0" /></div><div><label>其他扣款</label><input id="payDeductions" type="number" value="0" /></div>
+<div class="ok">V29 薪資規則：員工加班單只填日期、開始時間、結束時間與原因；系統依 09:00–17:00 表定工時、17:00 後起算，滿30分鐘進位為1小時，自動拆分平日前2小時/後續小時。HR 可於加班審核表調整當日類型為平日、休息日、國定假日、例假日。</div><div class="ok">勞保、健保投保金額可自動試算，也可由 HR 手動輸入投保金額；手動輸入後系統依手動投保金額計算扣款。</div><div class="warn">如果員工下拉空白，請按「重新整理後台資料」或「補齊員工帳密」。</div><div class="grid grid3"><div><label>員工</label><select id="payEmpSelect" onchange="updatePayrollHourlyRate()"></select></div><div><label>月份</label><input id="payMonth" type="month" /></div><div><label>加班費</label><input id="payOvertime" type="number" value="0" /></div><div><label>加班時薪</label><input id="payHourlyRate" type="number" value="0" step="0.01" readonly /><div class="muted">依選取員工工資基礎自動換算</div></div><div><label>加班倍率</label><input id="payOtMultiplier" type="number" value="1.34" step="0.01" /></div><div><label>雜費補助/津貼</label><input id="payAllowance" type="number" value="0" /></div><div><label>年中獎金</label><input id="payMidBonus" type="number" value="0" /></div><div><label>年終獎金</label><input id="payYearBonus" type="number" value="0" /></div><div><label>三節獎金</label><input id="payFestivalBonus" type="number" value="0" /></div><div><label>浮動獎金</label><input id="payVariableBonus" type="number" value="0" /></div><div><label>其他不列入工資</label><input id="payOtherNonWage" type="number" value="0" /></div><div><label>其他扣款</label><input id="payDeductions" type="number" value="0" /></div>
 <div><label>事假扣薪比例</label><input id="payPersonalRate" type="number" value="1" step="0.01" /></div>
 <div><label>病假扣薪比例</label><input id="paySickRate" type="number" value="0.5" step="0.01" /></div></div><button class="btnGreen" onclick="autoCalculatePayroll()">自動計算薪資</button><div id="payrollCalcDetail" class="scroll"></div><button class="btn2" onclick="fillApprovedOvertimePay()">帶入核准加班費</button><button onclick="createPayroll()">手動產生薪資</button><button class="btn2" onclick="loadInsuranceTotals()">勞健保總額統計</button><div id="insuranceTotals" class="scroll"></div></div><div class="card"><h2>薪資紀錄</h2><div id="payrollTable" class="scroll"></div></div></section>
 <section id="page-install" class="page hide"><div class="card"><h1>手機安裝方式</h1><div class="grid grid2"><div><h2>Android</h2><ol class="muted"><li>用 Chrome 開啟本網址</li><li>點右上角選單</li><li>選「安裝應用程式」或「加入主畫面」</li></ol></div><div><h2>iPhone</h2><ol class="muted"><li>用 Safari 開啟本網址</li><li>點分享按鈕</li><li>選「加入主畫面」</li></ol></div></div><div class="warn">請不要用 LINE 內建瀏覽器安裝；打卡需要允許 GPS 與相機權限。</div></div></section><div id="versionInfoCard" class="wrap hide"><div class="card"><b>版本：</b>沛鴻 HR Web V27｜員工加班單自動拆分時段；09:00–17:00表定工時；17:00後以0.5小時計；HR可調整假日類型。</div></div></main>
@@ -467,6 +467,8 @@ window.addEmployee=async()=>{
     salary:Number($('newEmpSalary').value||0),
     labor_insured_salary:Number($('newEmpLaborInsuredSalary')?.value||0),
     health_insured_salary:Number($('newEmpHealthInsuredSalary')?.value||0),
+    manual_labor_insured_salary:Number($('newEmpLaborInsuredSalary')?.value||0),
+    manual_health_insured_salary:Number($('newEmpHealthInsuredSalary')?.value||0),
     insurance_manual_override:(Number($('newEmpLaborInsuredSalary')?.value||0)>0 || Number($('newEmpHealthInsuredSalary')?.value||0)>0),
     meal_allowance:Number($('newEmpMeal')?.value||0),
     position_allowance:Number($('newEmpPositionAllowance')?.value||0),
@@ -484,6 +486,8 @@ window.addEmployee=async()=>{
   const autoIns = syncEmployeeInsurance('newEmp');
   p.labor_insured_salary = autoIns.laborInsured;
   p.health_insured_salary = autoIns.healthInsured;
+  p.manual_labor_insured_salary = autoIns.manualOverride ? autoIns.laborInsured : 0;
+  p.manual_health_insured_salary = autoIns.manualOverride ? autoIns.healthInsured : 0;
   p.insurance_manual_override = autoIns.manualOverride;
   p.labor_insurance = autoIns.laborEmployee;
   p.health_insurance = autoIns.healthSelf;
@@ -524,8 +528,8 @@ window.editEmployee = function(id){
   $('editEmpLogin').value = e.login_account || e.employee_no || '';
   $('editEmpPassword').value = e.login_password || '';
   $('editEmpSalary').value = e.salary || 0;
-  $('editEmpLaborInsuredSalary').value = e.labor_insured_salary || 0;
-  $('editEmpHealthInsuredSalary').value = e.health_insured_salary || 0;
+  $('editEmpLaborInsuredSalary').value = e.insurance_manual_override ? (e.manual_labor_insured_salary || e.labor_insured_salary || 0) : (e.labor_insured_salary || 0);
+  $('editEmpHealthInsuredSalary').value = e.insurance_manual_override ? (e.manual_health_insured_salary || e.health_insured_salary || 0) : (e.health_insured_salary || 0);
   $('editEmpMeal').value = e.meal_allowance || 0;
   $('editEmpPositionAllowance').value = e.position_allowance || 0;
   $('editEmpFuel').value = e.fixed_fuel_allowance || 0;
@@ -572,6 +576,8 @@ window.saveEmployeeEdit = async function(){
     salary: Number($('editEmpSalary').value || 0),
     labor_insured_salary: Number($('editEmpLaborInsuredSalary')?.value || 0),
     health_insured_salary: Number($('editEmpHealthInsuredSalary')?.value || 0),
+    manual_labor_insured_salary: Number($('editEmpLaborInsuredSalary')?.value || 0),
+    manual_health_insured_salary: Number($('editEmpHealthInsuredSalary')?.value || 0),
     insurance_manual_override: (Number($('editEmpLaborInsuredSalary')?.value || 0)>0 || Number($('editEmpHealthInsuredSalary')?.value || 0)>0),
     meal_allowance: Number($('editEmpMeal')?.value || 0),
     position_allowance: Number($('editEmpPositionAllowance')?.value || 0),
@@ -587,6 +593,8 @@ window.saveEmployeeEdit = async function(){
   const autoIns = syncEmployeeInsurance('editEmp');
   payload.labor_insured_salary = autoIns.laborInsured;
   payload.health_insured_salary = autoIns.healthInsured;
+  payload.manual_labor_insured_salary = autoIns.manualOverride ? autoIns.laborInsured : 0;
+  payload.manual_health_insured_salary = autoIns.manualOverride ? autoIns.healthInsured : 0;
   payload.insurance_manual_override = autoIns.manualOverride;
   payload.labor_insurance = autoIns.laborEmployee;
   payload.health_insurance = autoIns.healthSelf;
@@ -606,11 +614,16 @@ window.quickSalaryEdit = async function(id){
   if(salary === null) return;
   const updated = {...e, salary: Number(salary || 0)};
   const wageBase = employeeWageBase(updated);
-  const autoIns = calculateInsuranceFromSalary(updated.salary, updated.health_dependents_count);
+  const manualLabor = e.insurance_manual_override ? (num(e.manual_labor_insured_salary) || num(e.labor_insured_salary)) : 0;
+  const manualHealth = e.insurance_manual_override ? (num(e.manual_health_insured_salary) || num(e.health_insured_salary)) : 0;
+  const autoIns = calculateInsuranceFromSalary(updated.salary, updated.health_dependents_count, manualLabor, manualHealth);
   const r = await supabase.from('employees').update({
     salary: updated.salary,
     labor_insured_salary: autoIns.laborInsured,
     health_insured_salary: autoIns.healthInsured,
+    manual_labor_insured_salary: autoIns.manualOverride ? autoIns.laborInsured : 0,
+    manual_health_insured_salary: autoIns.manualOverride ? autoIns.healthInsured : 0,
+    insurance_manual_override: autoIns.manualOverride,
     labor_insurance: autoIns.laborEmployee,
     health_insurance: autoIns.healthSelf,
     dependent_health_insurance: autoIns.depHealth
@@ -823,8 +836,14 @@ function daysInMonth(month){
 }
 const WORK_START_HOUR = 9;
 const WORK_END_HOUR = 17;
-function halfHourFloor(hours){ return Math.ceil(Math.max(0, num(hours)) * 2) / 2; }
-function halfHourRuleText(){ return '加班以0.5小時為單位，不滿30分鐘以0.5小時計；超過30分鐘進位到下一小時。'; }
+function overtimeRoundByHalfHourThreshold(hours){
+  const h = Math.max(0, num(hours));
+  const whole = Math.floor(h);
+  const fraction = h - whole;
+  return fraction >= 0.5 ? whole + 1 : whole;
+}
+function halfHourFloor(hours){ return overtimeRoundByHalfHourThreshold(hours); }
+function halfHourRuleText(){ return '加班尾數滿30分鐘即進位為1小時；未滿30分鐘不計入尾數。'; }
 function leaveHours(start, end){
   if(!start || !end) return 0;
   let s = new Date(String(start).replace(' ', 'T'));
@@ -898,7 +917,7 @@ window.submitOvertime = async function(){
   const hours = calcHours(date, start, end);
   const dayType = inferOvertimeDayType(date);
   const split = splitOvertimeByLaw(dayType, hours);
-  if(!date || !start || !end || hours <= 0) return msg('請填寫正確加班日期與時間；平日加班從17:00後起算，以0.5小時為單位，超過30分鐘進位到下一小時','bad');
+  if(!date || !start || !end || hours <= 0) return msg('請填寫正確加班日期與時間；平日加班從17:00後起算，尾數滿30分鐘即進位為1小時','bad');
 
   const payload = {
     employee_id: selectedEmployee.id,
