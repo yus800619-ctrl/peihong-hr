@@ -1,0 +1,189 @@
+-- V30：加班改為按實際分鐘精準計算
+-- 規則：表定工時 09:00-17:00；加班從 17:00 後起算；不再滿 30 分鐘進位整小時。
+-- 範例：17:00-17:31 = 0.52 小時；17:00-18:15 = 1.25 小時；17:00-19:45 = 2.75 小時。
+
+-- 手動投保欄位保留
+alter table employees add column if not exists insurance_manual_override boolean default false;
+alter table employees add column if not exists manual_labor_insured_salary numeric default 0;
+alter table employees add column if not exists manual_health_insured_salary numeric default 0;
+
+-- 加班表欄位保留
+alter table overtime_requests add column if not exists overtime_breakdown jsonb default '{}'::jsonb;
+alter table overtime_requests add column if not exists overtime_day_type text default 'weekday';
+alter table overtime_requests add column if not exists day_type text default 'weekday';
+alter table overtime_requests add column if not exists start_time time;
+alter table overtime_requests add column if not exists end_time time;
+alter table overtime_requests add column if not exists overtime_start time;
+alter table overtime_requests add column if not exists overtime_end time;
+alter table overtime_requests add column if not exists overtime_hours numeric default 0;
+alter table overtime_requests add column if not exists total_hours numeric default 0;
+alter table overtime_requests add column if not exists calculated_hours numeric default 0;
+alter table overtime_requests add column if not exists weekday_first2_hours numeric default 0;
+alter table overtime_requests add column if not exists weekday_after2_hours numeric default 0;
+alter table overtime_requests add column if not exists restday_first2_hours numeric default 0;
+alter table overtime_requests add column if not exists restday_3to8_hours numeric default 0;
+alter table overtime_requests add column if not exists restday_9to12_hours numeric default 0;
+alter table overtime_requests add column if not exists holiday_hours numeric default 0;
+alter table overtime_requests add column if not exists regular_holiday_hours numeric default 0;
+alter table overtime_requests add column if not exists overtime_pay numeric default 0;
+alter table overtime_requests add column if not exists calculated_pay numeric default 0;
+
+-- 員工資料同步：手動投保優先，不覆蓋手動金額
+create or replace function peihong_sync_employee_v30()
+returns trigger
+language plpgsql
+as $$
+declare
+  dep_count numeric;
+begin
+  dep_count := least(greatest(coalesce(new.health_dependents_count,0),0),3);
+
+  if coalesce(new.insurance_manual_override,false) = true then
+    if coalesce(new.manual_labor_insured_salary,0) = 0
+       and coalesce(new.labor_insured_salary,0) > 0 then
+      new.manual_labor_insured_salary := new.labor_insured_salary;
+    end if;
+
+    if coalesce(new.manual_health_insured_salary,0) = 0
+       and coalesce(new.health_insured_salary,0) > 0 then
+      new.manual_health_insured_salary := new.health_insured_salary;
+    end if;
+
+    new.labor_insured_salary := new.manual_labor_insured_salary;
+    new.health_insured_salary := new.manual_health_insured_salary;
+  else
+    new.labor_insured_salary := peihong_labor_grade_v22(new.salary);
+    new.health_insured_salary := peihong_health_grade_v22(new.salary);
+  end if;
+
+  new.labor_insurance := round(new.labor_insured_salary * 0.125 * 0.2);
+  new.health_insurance := round(new.health_insured_salary * 0.0517 * 0.3);
+  new.dependent_health_insurance := round(new.health_insured_salary * 0.0517 * 0.3 * dep_count);
+  new.health_dependents_count := dep_count;
+
+  new.annual_leave_used := coalesce(new.annual_leave_used,0);
+  new.annual_leave_total := coalesce(new.annual_leave_total,0);
+  new.annual_leave_remaining := greatest(new.annual_leave_total - new.annual_leave_used, 0);
+
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_peihong_sync_employee_v28 on employees;
+drop trigger if exists trg_peihong_sync_employee_v29 on employees;
+drop trigger if exists trg_peihong_sync_employee_v30 on employees;
+
+create trigger trg_peihong_sync_employee_v30
+before insert or update
+on employees
+for each row
+execute function peihong_sync_employee_v30();
+
+-- 加班按實際分鐘計算，不進位整小時
+create or replace function peihong_overtime_hours_after_17_v30(
+  p_start time,
+  p_end time
+)
+returns numeric
+language plpgsql
+immutable
+as $$
+declare
+  s interval;
+  e interval;
+  base interval := interval '17 hours';
+  diff_hours numeric;
+begin
+  if p_start is null or p_end is null then
+    return 0;
+  end if;
+
+  s := p_start - time '00:00';
+  e := p_end - time '00:00';
+
+  if s < base then
+    s := base;
+  end if;
+
+  if e <= s then
+    return 0;
+  end if;
+
+  diff_hours := (extract(epoch from (e - s)) / 3600.0)::numeric;
+
+  return round(greatest(diff_hours,0), 4);
+end;
+$$;
+
+create or replace function peihong_sync_overtime_breakdown_v30()
+returns trigger
+language plpgsql
+as $$
+declare
+  hrs numeric;
+begin
+  hrs := peihong_overtime_hours_after_17_v30(
+    coalesce(new.start_time, new.overtime_start),
+    coalesce(new.end_time, new.overtime_end)
+  );
+
+  new.overtime_hours := hrs;
+  new.total_hours := hrs;
+  new.calculated_hours := hrs;
+
+  new.day_type := coalesce(new.day_type, new.overtime_day_type, 'weekday');
+  new.overtime_day_type := coalesce(new.overtime_day_type, new.day_type, 'weekday');
+
+  new.weekday_first2_hours := 0;
+  new.weekday_after2_hours := 0;
+  new.restday_first2_hours := 0;
+  new.restday_3to8_hours := 0;
+  new.restday_9to12_hours := 0;
+  new.holiday_hours := 0;
+  new.regular_holiday_hours := 0;
+
+  if new.day_type = 'weekday' then
+    new.weekday_first2_hours := least(hrs, 2);
+    new.weekday_after2_hours := greatest(hrs - 2, 0);
+  elsif new.day_type = 'restday' then
+    new.restday_first2_hours := least(hrs, 2);
+    new.restday_3to8_hours := least(greatest(hrs - 2, 0), 6);
+    new.restday_9to12_hours := greatest(hrs - 8, 0);
+  elsif new.day_type = 'holiday' then
+    new.holiday_hours := hrs;
+  elsif new.day_type = 'regular_holiday' then
+    new.regular_holiday_hours := hrs;
+  end if;
+
+  new.overtime_breakdown := jsonb_build_object(
+    'day_type', new.day_type,
+    'total_hours', hrs,
+    'weekday_first2_hours', new.weekday_first2_hours,
+    'weekday_after2_hours', new.weekday_after2_hours,
+    'restday_first2_hours', new.restday_first2_hours,
+    'restday_3to8_hours', new.restday_3to8_hours,
+    'restday_9to12_hours', new.restday_9to12_hours,
+    'holiday_hours', new.holiday_hours,
+    'regular_holiday_hours', new.regular_holiday_hours
+  );
+
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_peihong_sync_overtime_breakdown_v28 on overtime_requests;
+drop trigger if exists trg_peihong_sync_overtime_breakdown_v29 on overtime_requests;
+drop trigger if exists trg_peihong_sync_overtime_breakdown_v30 on overtime_requests;
+
+create trigger trg_peihong_sync_overtime_breakdown_v30
+before insert or update
+on overtime_requests
+for each row
+execute function peihong_sync_overtime_breakdown_v30();
+
+grant select, insert, update, delete on employees to anon, authenticated;
+grant select, insert, update, delete on overtime_requests to anon, authenticated;
+
+notify pgrst, 'reload schema';
+
+select 'V30 OK' as status;

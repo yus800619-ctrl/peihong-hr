@@ -1,108 +1,4 @@
-<!doctype html>
-<html lang="zh-Hant"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><meta name="theme-color" content="#0f172a"/><meta name="apple-mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-title" content="沛鴻HR"/><link rel="manifest" href="/manifest.webmanifest"/><title>沛鴻 HR 系統</title><style>
-*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f1f5f9;color:#0f172a}
-.top{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.96);border-bottom:1px solid #e2e8f0;backdrop-filter:blur(10px)}
-.nav{max-width:1160px;margin:0 auto;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
-.brand{display:flex;gap:10px;align-items:center;font-weight:900}.logo{width:44px;height:44px;border-radius:16px;background:#020617;color:white;display:flex;align-items:center;justify-content:center;font-size:22px}
-.wrap{max-width:1160px;margin:0 auto;padding:16px}.grid{display:grid;gap:14px}.grid2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}.grid3{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
-.card{background:white;border:1px solid #e2e8f0;border-radius:24px;padding:22px;margin:12px 0;box-shadow:0 1px 8px rgba(15,23,42,.06)}
-h1{font-size:30px;margin:0 0 8px;font-weight:900}h2{margin:0 0 12px}.muted{color:#64748b;line-height:1.7}
-button,.btn{border:0;border-radius:16px;padding:12px 16px;font-weight:900;cursor:pointer;background:#020617;color:white;text-decoration:none;display:inline-block;margin:3px}
-.btn2{background:#f1f5f9;color:#0f172a}.btnRed{background:#dc2626}.btnGreen{background:#059669}
-input,select,textarea{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:14px;margin:6px 0 12px;font:inherit;background:white}
-label{font-size:14px;font-weight:800;color:#334155}table{width:100%;border-collapse:collapse}th,td{padding:10px;border-bottom:1px solid #e2e8f0;text-align:left;white-space:nowrap}.scroll{overflow:auto}
-.ok{background:#f0fdf4;color:#15803d;border-radius:14px;padding:12px;font-weight:800}.warn{background:#fff7ed;color:#c2410c;border-radius:14px;padding:12px;font-weight:800}.bad{background:#fef2f2;color:#b91c1c;border-radius:14px;padding:12px;font-weight:800}
-.pill{display:inline-block;padding:5px 10px;border-radius:999px;background:#f1f5f9;font-size:12px;font-weight:800}.hide{display:none!important}.photo{max-width:90px;max-height:90px;border-radius:12px;border:1px solid #e2e8f0;object-fit:cover}
-@media(max-width:700px){.nav{align-items:flex-start}h1{font-size:26px}.wrap{padding:10px}.card{padding:16px;border-radius:20px}}
-</style></head><body>
-<div id="versionTopBanner" class="hide" style="background:#16a34a;color:white;font-weight:900;text-align:center;padding:14px;font-size:20px;">
-  沛鴻 HR Web V33｜手動投保＋加班分鐘精算版
-</div>
 
-
-
-
-
-
-
-
-
-
-
-
-
-<header class="top"><div class="nav"><div class="brand"><div class="logo">沛</div><div>沛鴻 HR<div style="font-size:12px;color:#64748b">出勤・請假・薪資</div></div></div><div><button class="btn2" onclick="showPage('home')">首頁</button><button class="btn2" onclick="showPage('employee')">員工端</button><button class="btn2" onclick="showPage('admin')">HR後台</button><button class="btn2" onclick="showPage('install')">手機安裝</button></div></div></header>
-<main class="wrap"><div id="msg"></div>
-<section id="page-home" class="page"><div class="card"><h1>沛鴻聚合工程有限公司 HR 系統</h1><p class="muted">可使用員工資料、打卡、請假、加班申請與薪資查詢功能。</p><div class="ok">手機可開啟此網址，Android 用 Chrome 安裝，iPhone 用 Safari 加入主畫面。</div></div><div class="grid grid3"><div class="card"><h2>員工端</h2><p class="muted">選擇員工後可打卡、送請假、查薪資。</p><button onclick="showPage('employee')">進入員工端</button></div><div class="card"><h2>HR 後台</h2><p class="muted">管理員工、出勤、請假、薪資、公司GPS。</p><button onclick="showPage('admin')">進入後台</button></div><div class="card"><h2>手機安裝</h2><p class="muted">加入主畫面後像 App 一樣使用。</p><button onclick="showPage('install')">查看安裝方式</button></div></div></section>
-<section id="page-employee" class="page hide"><div class="card" id="employeeLoginCard">
-  <h1>員工登入</h1>
-  <p class="muted">請輸入員工帳號與密碼。若舊員工尚未設定密碼，請由 HR 後台編輯該員工密碼。</p>
-  <label>員工帳號</label><input id="empLoginAccount" placeholder="例如 E001" />
-  <label>密碼</label><input id="empLoginPassword" type="password" placeholder="請輸入密碼" />
-  <button onclick="employeeLogin()">登入</button>
-</div>
-<div class="card hide" id="employeeWelcomeCard">
-  <h1 id="employeeWelcome">員工端</h1>
-  <button class="btn2" onclick="employeeLogout()">登出</button>
-</div><div id="employeePanel" class="hide"><div class="grid grid2"><div class="card"><h2>手機打卡</h2><div class="ok">GPS 與照片皆為選填，可直接打卡。</div><p id="gpsText" class="muted">GPS 選填：可不取得定位直接打卡</p><button onclick="getGps()">取得 GPS</button><label>工作地點 / 備註</label><input id="workLocation" value="公司" /><label>打卡照片（選填）</label><input id="photoInput" type="file" accept="image/*" capture="environment" /><button class="btnGreen" onclick="checkIn()">上班打卡</button><button onclick="checkOut()">下班打卡</button></div><div class="card"><h2>請假申請</h2><label>假別</label><select id="leaveType"><option>特休</option><option>事假</option><option>病假</option><option>公假</option><option>其他</option></select><label>開始時間</label><input id="leaveStart" type="datetime-local" /><label>結束時間</label><input id="leaveEnd" type="datetime-local" /><label>原因</label><textarea id="leaveReason"></textarea><button onclick="submitLeave()">送出請假</button></div>
-<div class="card"><h2>加班申請</h2>
-<label>加班日期</label><input id="otDate" type="date" />
-<div class="ok">加班類型由系統自動判斷，員工不用選倍率；HR 審核時可調整當日類型。</div>
-<label>開始時間（24小時制，平日加班建議17:00）</label><input id="otStart" type="time" step="1800" value="17:00" />
-<label>結束時間（24小時制，半小時單位）</label><input id="otEnd" type="time" step="1800" />
-<label>加班原因</label><textarea id="otReason" placeholder="請輸入加班原因"></textarea>
-<p class="muted">表定工時09:00–17:00；加班從17:00後起算，依實際分鐘精準換算小時數。送出後系統會自動拆分加班時段，由 HR 後台審核後帶入薪資。</p>
-<button onclick="submitOvertime()">送出加班申請</button>
-</div></div><div class="grid grid2"><div class="card"><h2>我的打卡紀錄</h2><div id="myAttendance" class="scroll"></div></div><div class="card"><h2>我的加班申請</h2><div id="myOvertime" class="scroll"></div></div><div class="card"><h2>我的薪資</h2><label>薪資月份</label><input id="myPayrollMonth" type="month" /><button onclick="loadMyPayroll()">查詢薪資</button><div id="myPayroll"></div></div></div></div></section>
-<section id="page-admin" class="page hide"><div class="card"><h1>HR 後台</h1><p class="muted">HR 後台需帳號密碼登入。請正式使用前立即修改後台密碼。</p><button onclick="loadAdminAll()">重新整理後台資料</button><button class="btn2" onclick="checkEmployeesTable()">檢查員工資料</button><button class="btnRed" onclick="hrLogout()">HR登出</button><button class="btn2" onclick="fillMissingEmployeeAccounts()">補齊員工帳號</button><button class="btnGreen" onclick="createDemoEmployee()">建立測試員工</button><button class="btn2" onclick="exportEmployeesCsv()">匯出員工CSV</button><button class="btn2" onclick="exportAttendanceCsv()">匯出出勤CSV</button><button class="btn2" onclick="changeAdminPin()">修改後台帳密</button></div><div class="grid grid2"><div class="card"><h2>公司設定</h2><label>公司名稱</label><input id="companyName" value="沛鴻聚合工程有限公司" /><label>公司 GPS Lat</label><input id="companyLat" type="number" step="0.0000001" /><label>公司 GPS Lng</label><input id="companyLng" type="number" step="0.0000001" /><label>打卡範圍（公尺）</label><input id="companyRadius" type="number" value="100" /><button onclick="saveCompany()">儲存公司設定</button></div><div class="card"><h2>新增員工</h2><label>員工編號</label><input id="newEmpNo" placeholder="E001" /><label>姓名</label><input id="newEmpName" /><label>部門</label><input id="newEmpDept" /><label>職稱</label><input id="newEmpPos" /><label>職等</label><input id="newEmpGrade" placeholder="例：A1 / 工程師一級" /><label>婚姻狀態</label><select id="newEmpMaritalStatus"><option value="">請選擇</option><option>未婚</option><option>已婚</option><option>其他</option></select><label>身分證字號</label><input id="newEmpNationalId" /><label>居住地址</label><input id="newEmpAddress" /><label>銀行名稱/代碼</label><input id="newEmpBankName" placeholder="例：台灣銀行 004" /><label>薪轉帳號</label><input id="newEmpBankAccount" /><label>金融卡號</label><input id="newEmpBankCardNumber" /><label>電話</label><input id="newEmpPhone" /><label>緊急聯絡人</label><input id="newEmpEmergencyContact" placeholder="姓名/關係/電話" /><label>到職日</label><input id="newEmpHireDate" type="date" /><label>離職日</label><input id="newEmpTerminationDate" type="date" /><label>特休總天數</label><input id="newEmpAnnualLeaveTotal" type="number" value="0" step="0.5" /><label>特休已用天數</label><input id="newEmpAnnualLeaveUsed" type="number" value="0" step="0.5" /><label>特休剩餘天數</label><input id="newEmpAnnualLeaveRemaining" type="number" value="0" step="0.5" readonly /><label>特休使用期限</label><input id="newEmpAnnualLeaveExpireDate" type="date" /><label>登入帳號</label><input id="newEmpLogin" placeholder="預設同員工編號" /><label>登入密碼</label><input id="newEmpPassword" placeholder="請輸入密碼" type="text" /><label>月薪/本薪</label><input id="newEmpSalary" type="number" value="0" /><label>勞保投保金額（可手動輸入）</label><input id="newEmpLaborInsuredSalary" type="number" value="0" /><label>健保投保金額（可手動輸入）</label><input id="newEmpHealthInsuredSalary" type="number" value="0" /><label>伙食津貼</label><input id="newEmpMeal" type="number" value="0" /><label>職務加給</label><input id="newEmpPositionAllowance" type="number" value="0" /><label>固定油資補助</label><input id="newEmpFuel" type="number" value="0" /><label>固定績效獎金</label><input id="newEmpFixedBonus" type="number" value="0" /><label>其他固定津貼</label><input id="newEmpOtherFixed" type="number" value="0" /><label>勞保扣款</label><input id="newEmpLabor" type="number" value="0" /><label>健保扣款</label><input id="newEmpHealth" type="number" value="0" /><label>健保眷屬人數</label><input id="newEmpDependents" type="number" value="0" /><label>眷屬健保扣款</label><input id="newEmpDepHealth" type="number" value="0" /><div id="newEmpInsurancePreview" class="ok">輸入薪資後會自動試算；若手動填寫勞健保投保金額，系統將依手動投保金額計算。</div><button onclick="addEmployee()">新增員工</button></div></div><div class="card"><h2>員工列表</h2><div class="warn">點「編輯」可修改月薪、勞保、健保、眷屬健保、帳號密碼。</div><div id="employeeDebug" class="muted"></div><div id="employeeTable" class="scroll"></div></div>
-<div class="card hide" id="editEmployeeCard">
-  <h2>編輯員工資料</h2>
-  <input id="editEmpId" type="hidden" />
-  <div class="grid grid3">
-    <div><label>員工編號</label><input id="editEmpNo" /></div>
-    <div><label>姓名</label><input id="editEmpName" /></div>
-    <div><label>部門</label><input id="editEmpDept" /></div>
-    <div><label>職稱</label><input id="editEmpPos" /></div>
-    <div><label>職等</label><input id="editEmpGrade" /></div>
-    <div><label>婚姻狀態</label><select id="editEmpMaritalStatus"><option value="">請選擇</option><option>未婚</option><option>已婚</option><option>其他</option></select></div>
-    <div><label>身分證字號</label><input id="editEmpNationalId" /></div>
-    <div><label>居住地址</label><input id="editEmpAddress" /></div>
-    <div><label>銀行名稱/代碼</label><input id="editEmpBankName" /></div>
-    <div><label>薪轉帳號</label><input id="editEmpBankAccount" /></div>
-    <div><label>金融卡號</label><input id="editEmpBankCardNumber" /></div>
-    <div><label>電話</label><input id="editEmpPhone" /></div>
-    <div><label>緊急聯絡人</label><input id="editEmpEmergencyContact" /></div>
-    <div><label>到職日</label><input id="editEmpHireDate" type="date" /></div>
-    <div><label>離職日</label><input id="editEmpTerminationDate" type="date" /></div>
-    <div><label>特休總天數</label><input id="editEmpAnnualLeaveTotal" type="number" step="0.5" /></div>
-    <div><label>特休已用天數</label><input id="editEmpAnnualLeaveUsed" type="number" step="0.5" /></div>
-    <div><label>特休剩餘天數</label><input id="editEmpAnnualLeaveRemaining" type="number" step="0.5" readonly /></div>
-    <div><label>特休使用期限</label><input id="editEmpAnnualLeaveExpireDate" type="date" /></div>
-    <div><label>登入帳號</label><input id="editEmpLogin" /></div>
-    <div><label>登入密碼</label><input id="editEmpPassword" /></div>
-    <div><label>月薪/本薪</label><input id="editEmpSalary" type="number" step="1" /></div>
-    <div><label>勞保投保金額（可手動輸入）</label><input id="editEmpLaborInsuredSalary" type="number" step="1" /></div>
-    <div><label>健保投保金額（可手動輸入）</label><input id="editEmpHealthInsuredSalary" type="number" step="1" /></div>
-    <div><label>伙食津貼</label><input id="editEmpMeal" type="number" step="1" /></div>
-    <div><label>職務加給</label><input id="editEmpPositionAllowance" type="number" step="1" /></div>
-    <div><label>固定油資補助</label><input id="editEmpFuel" type="number" step="1" /></div>
-    <div><label>固定績效獎金</label><input id="editEmpFixedBonus" type="number" step="1" /></div>
-    <div><label>其他固定津貼</label><input id="editEmpOtherFixed" type="number" step="1" /></div>
-    <div><label>勞保扣款</label><input id="editEmpLabor" type="number" step="1" /></div>
-    <div><label>健保扣款</label><input id="editEmpHealth" type="number" step="1" /></div>
-    <div><label>健保眷屬人數</label><input id="editEmpDependents" type="number" step="1" /></div>
-    <div><label>眷屬健保扣款</label><input id="editEmpDepHealth" type="number" step="1" /></div>
-    <div><label>員工狀態</label><select id="editEmpActive"><option value="true">在職</option><option value="false">停用</option></select></div>
-  </div>
-  <div id="editEmpInsurancePreview" class="ok">可手動輸入勞健保投保金額；留空或0則依本薪自動試算。津貼只影響加班時薪。</div>
-  <button onclick="saveEmployeeEdit()">儲存員工資料</button>
-  <button class="btn2" onclick="cancelEmployeeEdit()">取消</button>
-</div><div class="card"><h2>出勤紀錄</h2><div id="attendanceTable" class="scroll"></div></div><div class="card"><h2>請假審核</h2><div id="leaveTable" class="scroll"></div></div><div class="card"><h2>加班審核</h2><div id="overtimeTable" class="scroll"></div></div><div class="card"><h2>產生薪資</h2>
-<div class="ok">V33 薪資規則：員工加班單只填日期、開始時間、結束時間與原因；系統依 09:00–17:00 表定工時、17:00 後起算，依實際分鐘精準換算小時數，自動拆分平日前2小時/後續小時。HR 可於加班審核表調整當日類型為平日、休息日、國定假日、例假日。</div><div class="ok">勞保、健保投保金額可自動試算，也可由 HR 手動輸入投保金額；手動輸入後系統依手動投保金額計算扣款。</div><div class="warn">如果員工下拉空白，請按「重新整理後台資料」或「補齊員工帳密」。</div><div class="grid grid3"><div><label>員工</label><select id="payEmpSelect" onchange="updatePayrollHourlyRate()"></select></div><div><label>月份</label><input id="payMonth" type="month" /></div><div><label>加班費</label><input id="payOvertime" type="number" value="0" /></div><div><label>加班時薪</label><input id="payHourlyRate" type="number" value="0" step="0.01" readonly /><div class="muted">依選取員工工資基礎自動換算</div></div><div><label>加班倍率</label><input id="payOtMultiplier" type="number" value="1.34" step="0.01" /></div><div><label>雜費補助/津貼</label><input id="payAllowance" type="number" value="0" /></div><div><label>年中獎金</label><input id="payMidBonus" type="number" value="0" /></div><div><label>年終獎金</label><input id="payYearBonus" type="number" value="0" /></div><div><label>三節獎金</label><input id="payFestivalBonus" type="number" value="0" /></div><div><label>浮動獎金</label><input id="payVariableBonus" type="number" value="0" /></div><div><label>其他不列入工資</label><input id="payOtherNonWage" type="number" value="0" /></div><div><label>其他扣款</label><input id="payDeductions" type="number" value="0" /></div>
-<div><label>事假扣薪比例</label><input id="payPersonalRate" type="number" value="1" step="0.01" /></div>
-<div><label>病假扣薪比例</label><input id="paySickRate" type="number" value="0.5" step="0.01" /></div></div><button class="btnGreen" onclick="autoCalculatePayroll()">自動計算薪資</button><div id="payrollCalcDetail" class="scroll"></div><button class="btn2" onclick="fillApprovedOvertimePay()">帶入核准加班費</button><button onclick="createPayroll()">手動產生薪資</button><button class="btn2" onclick="loadInsuranceTotals()">勞健保總額統計</button><div id="insuranceTotals" class="scroll"></div></div><div class="card"><h2>薪資紀錄</h2><div id="payrollTable" class="scroll"></div></div></section>
-<section id="page-install" class="page hide"><div class="card"><h1>手機安裝方式</h1><div class="grid grid2"><div><h2>Android</h2><ol class="muted"><li>用 Chrome 開啟本網址</li><li>點右上角選單</li><li>選「安裝應用程式」或「加入主畫面」</li></ol></div><div><h2>iPhone</h2><ol class="muted"><li>用 Safari 開啟本網址</li><li>點分享按鈕</li><li>選「加入主畫面」</li></ol></div></div><div class="warn">請不要用 LINE 內建瀏覽器安裝；打卡需要允許 GPS 與相機權限。</div></div></section><div id="versionInfoCard" class="wrap hide"><div class="card"><b>版本：</b>沛鴻 HR Web V33｜員工加班單自動拆分時段；09:00–17:00表定工時；17:00後依實際分鐘精準計算；HR可調整假日類型。</div></div></main>
-<script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const supabase = createClient('https://mhsasrjpuottlmhsutnb.supabase.co', 'sb_publishable_2lGa4xcG6gxuFTYas0A0Bw_1I56RG5I');
 let employees=[], selectedEmployee=null, currentGps=null;
@@ -704,7 +600,7 @@ function inferOvertimeDayType(dateStr){
   return 'weekday';
 }
 function splitOvertimeByLaw(dayType, hours){
-  const h = round2(hours);
+  const h = halfHourFloor(hours);
   const result = {
     weekday_first2:0, weekday_after2:0,
     rest_first2:0, rest_3to8:0, rest_9to12:0,
@@ -731,28 +627,7 @@ function splitOvertimeByLaw(dayType, hours){
   return result;
 }
 function mergeOvertimeHours(target, parts){
-  if(!parts) return;
-  const alias = {
-    weekday_first2_hours:'weekday_first2',
-    weekday_after2_hours:'weekday_after2',
-    restday_first2_hours:'rest_first2',
-    restday_3to8_hours:'rest_3to8',
-    restday_9to12_hours:'rest_9to12',
-    holiday_hours:'holiday_within8',
-    regular_holiday_hours:'regular_emergency'
-  };
   for(const k of Object.keys(target)) target[k] = num(target[k]) + num(parts[k]);
-  for(const [from,to] of Object.entries(alias)){
-    if(parts[from] !== undefined) target[to] = num(target[to]) + num(parts[from]);
-  }
-}
-function getOvertimePayValue(row){
-  return num(row.overtime_pay) || num(row.calculated_pay) || num(row.pay_amount) || num(row.overtime_amount) || num(row.total_pay) || num(row.overtime_breakdown?.overtime_pay);
-}
-function normalizeOvertimeDayType(v){
-  if(v === 'restday') return 'rest_day';
-  if(v === 'holiday') return 'national_holiday';
-  return v || 'weekday';
 }
 function summarizeOvertimeSplit(parts){
   const items = Object.entries(parts).filter(([,v])=>num(v)>0).map(([k,v])=>`${overtimeTypeLabels[k]||k} ${v}小時`);
@@ -924,7 +799,7 @@ function calcHours(date, start, end){
   if(s < legalStart) s = legalStart;
   let e = new Date(`${date}T${end}:00`);
   if(e <= s) e = new Date(e.getTime() + 24*60*60*1000);
-  return round2((e - s) / 3600000);
+  return halfHourFloor((e - s) / 3600000);
 }
 window.submitOvertime = async function(){
   if(!selectedEmployee) return msg('請先登入員工','bad');
@@ -968,15 +843,14 @@ async function loadMyOvertime(){
     $('myOvertime').innerHTML = `<div class="bad">加班紀錄讀取失敗：${r.error.message}</div>`;
     return;
   }
-  $('myOvertime').innerHTML = table(['日期','當日類型','時間','時數','加班費','系統拆分','原因','狀態'], (r.data||[]).map(x => {
-    const dayType = normalizeOvertimeDayType(x.overtime_day_type || x.day_type || inferOvertimeDayType(x.overtime_date));
+  $('myOvertime').innerHTML = table(['日期','當日類型','時間','時數','系統拆分','原因','狀態'], (r.data||[]).map(x => {
+    const dayType = x.overtime_day_type || inferOvertimeDayType(x.overtime_date);
     const parts = x.overtime_breakdown || splitOvertimeByLaw(dayType, x.overtime_hours);
     return [
       x.overtime_date || '-',
       overtimeDayTypeLabels[dayType] || '平日',
       `${String(x.start_time||'').slice(0,5)}~${String(x.end_time||'').slice(0,5)}`,
       x.overtime_hours || 0,
-      '$'+money(getOvertimePayValue(x)),
       summarizeOvertimeSplit(parts),
       x.reason || '-',
       x.status || 'pending'
@@ -994,7 +868,7 @@ async function loadOvertimeTable(){
     return;
   }
   $('overtimeTable').innerHTML = table(['員工','日期','當日類型','時間','時數','系統拆分','原因','狀態','操作'], (r.data||[]).map(x => {
-    const dayType = normalizeOvertimeDayType(x.overtime_day_type || x.day_type || inferOvertimeDayType(x.overtime_date));
+    const dayType = x.overtime_day_type || inferOvertimeDayType(x.overtime_date);
     const parts = x.overtime_breakdown || splitOvertimeByLaw(dayType, x.overtime_hours);
     const typeSelect = `<select onchange="updateOvertimeDayType('${x.id}', this.value)"><option value="weekday" ${dayType==='weekday'?'selected':''}>平日</option><option value="rest_day" ${dayType==='rest_day'?'selected':''}>休息日</option><option value="national_holiday" ${dayType==='national_holiday'?'selected':''}>國定假日/特休</option><option value="regular_holiday" ${dayType==='regular_holiday'?'selected':''}>例假日</option></select>`;
     return [
@@ -1003,7 +877,6 @@ async function loadOvertimeTable(){
       typeSelect,
       `${String(x.start_time||'').slice(0,5)}~${String(x.end_time||'').slice(0,5)}`,
       x.overtime_hours || 0,
-      '$'+money(getOvertimePayValue(x)),
       summarizeOvertimeSplit(parts),
       x.reason || '-',
       x.status || 'pending',
@@ -1056,7 +929,7 @@ async function getApprovedOvertimeBreakdown(empId, month, hourlyRate){
       const type = row.overtime_type || 'weekday_first2';
       hours[type] = num(hours[type]) + num(row.overtime_hours);
     }else{
-      const dayType = normalizeOvertimeDayType(row.overtime_day_type || row.day_type || inferOvertimeDayType(row.overtime_date));
+      const dayType = row.overtime_day_type || inferOvertimeDayType(row.overtime_date);
       mergeOvertimeHours(hours, splitOvertimeByLaw(dayType, row.overtime_hours));
     }
   }
@@ -1068,10 +941,8 @@ async function getApprovedOvertimeBreakdown(empId, month, hourlyRate){
     regular: round2(hourlyRate * (hours.regular_emergency*2 + hours.regular_after8_first2*1.34 + hours.regular_after8_after2*1.67))
   };
   const totalHours = Object.values(hours).reduce((a,b)=>a+num(b),0);
-  const storedTotal = round2((r.data||[]).reduce((sum,row)=>sum+getOvertimePayValue(row),0));
-  const calculatedTotal = round2(pay.weekday + pay.rest + pay.holiday + pay.regular);
-  const total = storedTotal > 0 ? storedTotal : calculatedTotal;
-  return {hours, totalHours:round2(totalHours), pay, total, rows:r.data||[], storedTotal, calculatedTotal};
+  const total = round2(pay.weekday + pay.rest + pay.holiday + pay.regular);
+  return {hours, totalHours:round2(totalHours), pay, total, rows:r.data||[]};
 }
 window.fillApprovedOvertimePay = async function(){
   if(!hrLoginPrompt()) return;
@@ -1262,4 +1133,3 @@ window.deleteEmployee = async function(id){
 
 async function loadPayrollTable(){let r=await supabase.from('payroll').select('*, employees(employee_no,name)').order('created_at',{ascending:false}).limit(100);if(r.error)return;$('payrollTable').innerHTML=table(['月份','員工','本薪','加班','津貼','扣款','勞健保眷屬','實發','操作'],(r.data||[]).map(p=>[p.payroll_month,(p.employees?.employee_no||'')+' '+(p.employees?.name||''),'$'+money(p.base_salary),'$'+money(p.overtime_pay),'$'+money(p.allowance),'$'+money(p.deductions),'$'+money(+p.labor_insurance+ +p.health_insurance+ +p.dependent_health_insurance),'$'+money(p.net_salary),`<button class="btnRed" onclick="deletePayroll('${p.id}')">刪除</button>`]))}
 window.addEventListener('load',()=>{ loadEmployees().then(updatePayrollHourlyRate); attachInsuranceAutoSync('newEmp'); ['HireDate','AnnualLeaveTotal','AnnualLeaveUsed'].forEach(k=>{ const el=$('newEmp'+k); if(el){ el.addEventListener('input',()=>syncAnnualLeave('newEmp')); el.addEventListener('change',()=>syncAnnualLeave('newEmp')); }}); syncAnnualLeave('newEmp'); });
-</script></body></html>
