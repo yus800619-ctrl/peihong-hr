@@ -1,0 +1,61 @@
+-- V26：員工加班單自動拆分時段 + HR調整假日類型
+-- 員工不用選「前兩小/後兩小」，只填日期、開始、結束、原因。
+-- 系統依 09:00–17:00 表定工時、17:00 後起算、0.5 小時計，自動拆平日/休息日/國定假日/例假日加班費。
+
+alter table overtime_requests add column if not exists overtime_day_type text default 'weekday';
+alter table overtime_requests add column if not exists overtime_breakdown jsonb default '{}'::jsonb;
+alter table overtime_requests add column if not exists reviewed_at timestamp;
+alter table overtime_requests add column if not exists reviewed_by text;
+
+-- 既有舊資料若沒有 day type，先依星期自動補：週六休息日、週日例假日、其他平日。
+update overtime_requests
+set overtime_day_type = case
+  when extract(dow from overtime_date) = 0 then 'regular_holiday'
+  when extract(dow from overtime_date) = 6 then 'rest_day'
+  else 'weekday'
+end
+where overtime_day_type is null or overtime_day_type = '';
+
+-- 既有舊資料先補自動拆分，避免薪資帶入空白。
+update overtime_requests
+set overtime_breakdown = case
+  when overtime_day_type = 'rest_day' then jsonb_build_object(
+    'rest_first2', least(coalesce(overtime_hours,0),2),
+    'rest_3to8', least(greatest(coalesce(overtime_hours,0)-2,0),6),
+    'rest_9to12', greatest(coalesce(overtime_hours,0)-8,0)
+  )
+  when overtime_day_type = 'national_holiday' then jsonb_build_object(
+    'holiday_within8', least(coalesce(overtime_hours,0),8),
+    'holiday_after8_first2', least(greatest(coalesce(overtime_hours,0)-8,0),2),
+    'holiday_after8_after2', greatest(coalesce(overtime_hours,0)-10,0)
+  )
+  when overtime_day_type = 'regular_holiday' then jsonb_build_object(
+    'regular_emergency', least(coalesce(overtime_hours,0),8),
+    'regular_after8_first2', least(greatest(coalesce(overtime_hours,0)-8,0),2),
+    'regular_after8_after2', greatest(coalesce(overtime_hours,0)-10,0)
+  )
+  else jsonb_build_object(
+    'weekday_first2', least(coalesce(overtime_hours,0),2),
+    'weekday_after2', greatest(coalesce(overtime_hours,0)-2,0)
+  )
+end
+where overtime_breakdown is null or overtime_breakdown = '{}'::jsonb;
+
+-- 讓前端可讀寫加班資料。
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on overtime_requests to anon, authenticated;
+
+-- 重新整理 Supabase PostgREST schema cache，避免新增欄位後前端仍抓不到。
+notify pgrst, 'reload schema';
+
+select
+  overtime_date,
+  start_time,
+  end_time,
+  overtime_hours,
+  overtime_day_type,
+  overtime_breakdown,
+  status
+from overtime_requests
+order by created_at desc
+limit 20;
