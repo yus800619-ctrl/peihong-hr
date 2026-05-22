@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>沛鴻 HR 獨立報表頁 V36.2</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f1f5f9;color:#0f172a}.top{background:#020617;color:white;padding:16px 20px}.wrap{max-width:1100px;margin:0 auto;padding:18px}.card{background:white;border:1px solid #e2e8f0;border-radius:22px;padding:22px;margin:14px 0;box-shadow:0 1px 8px rgba(15,23,42,.06)}h1{margin:0 0 8px;font-size:28px}h2{margin:0 0 12px}.muted{color:#64748b;line-height:1.7}.grid{display:grid;gap:14px}.grid2{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}label{font-size:14px;font-weight:800;color:#334155}input,select{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:14px;margin:6px 0 12px;font:inherit;background:white}button,.btn{border:0;border-radius:16px;padding:12px 16px;font-weight:900;cursor:pointer;background:#020617;color:white;text-decoration:none;display:inline-block;margin:3px}.btn2{background:#e2e8f0;color:#0f172a}.btnGreen{background:#059669}.btnRed{background:#dc2626}.ok{background:#f0fdf4;color:#15803d;border-radius:14px;padding:12px;font-weight:800}.warn{background:#fff7ed;color:#c2410c;border-radius:14px;padding:12px;font-weight:800}.bad{background:#fef2f2;color:#b91c1c;border-radius:14px;padding:12px;font-weight:800}.hide{display:none!important}table{width:100%;border-collapse:collapse}th,td{padding:9px;border-bottom:1px solid #e2e8f0;text-align:left;white-space:nowrap}.scroll{overflow:auto}.pill{display:inline-block;padding:4px 10px;border-radius:999px;background:#e2e8f0;font-size:12px;font-weight:800}
+  </style>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <div class="top"><div class="wrap" style="padding:0"><h1>沛鴻 HR 獨立報表頁</h1><div>V36.2｜可依年份 / 月份匯出單一 Excel，多工作表；只讀取資料，不修改原系統。</div></div></div>
+  <main class="wrap">
+    <div id="msg"></div>
+    <section class="card" id="loginCard">
+      <h2>HR 登入</h2>
+      <p class="muted">此頁為獨立報表工具，不影響原本 HR 系統。帳密讀取 Supabase 的 HR 後台設定。</p>
+      <label>帳號</label><input id="adminAccount" value="admin" />
+      <label>密碼</label><input id="adminPassword" type="password" placeholder="請輸入後台密碼" />
+      <button onclick="reportLogin()">登入報表頁</button>
+      <a class="btn btn2" href="/">回原系統</a>
+    </section>
+
+    <section class="card hide" id="reportCard">
+      <h2>報表匯出</h2>
+      <div class="ok">安全模式：只讀取 employees、payroll、attendance、leave_requests、overtime_requests，不寫入、不更新、不刪除。</div>
+      <div class="grid grid2">
+        <div>
+          <label>年份</label>
+          <select id="reportYear"></select>
+        </div>
+        <div>
+          <label>月份</label>
+          <select id="reportMonth">
+            <option value="all">全部月份</option>
+            <option value="01">1 月</option>
+            <option value="02">2 月</option>
+            <option value="03">3 月</option>
+            <option value="04">4 月</option>
+            <option value="05">5 月</option>
+            <option value="06">6 月</option>
+            <option value="07">7 月</option>
+            <option value="08">8 月</option>
+            <option value="09">9 月</option>
+            <option value="10">10 月</option>
+            <option value="11">11 月</option>
+            <option value="12">12 月</option>
+          </select>
+        </div>
+      </div>
+      <button class="btnGreen" onclick="exportFullReport()">匯出完整總報表 Excel</button>
+      <button class="btn2" onclick="loadPreview()">預覽資料筆數</button>
+      <button class="btnRed" onclick="logout()">登出</button>
+      <a class="btn btn2" href="/">回原系統</a>
+      <div id="preview" class="scroll" style="margin-top:14px"></div>
+    </section>
+
+    <section class="card">
+      <h2>Excel 內容</h2>
+      <p class="muted">匯出的單一 Excel 內含多個工作表：儀表總覽、員工資料、薪資總表、打卡明細、請假明細、加班明細、特休明細。年份/月分篩選會套用在薪資、打卡、請假、加班等日期資料；員工資料與特休會一併放在同一個 Excel 裡，方便備份與核對。</p>
+    </section>
+  </main>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+const supabase = createClient('https://mhsasrjpuottlmhsutnb.supabase.co', 'sb_publishable_2lGa4xcG6gxuFTYas0A0Bw_1I56RG5I');
+const $ = id => document.getElementById(id);
+const n = v => Number.isFinite(Number(v)) ? Number(v) : 0;
+const pick = (o, keys, d='') => { for(const k of keys){ if(o && o[k] !== undefined && o[k] !== null && o[k] !== '') return o[k]; } return d; };
+const fmtDate = v => v ? String(v).slice(0,10) : '';
+const fmtTime = v => v ? String(v).slice(0,5) : '';
+const money = v => Math.round(n(v) * 100) / 100;
+function show(msg, type='ok'){ $('msg').innerHTML = `<div class="${type}">${msg}</div>`; }
+function initReportFilters(){
+  const ySel = $('reportYear');
+  if(!ySel) return;
+  const now = new Date();
+  const y = now.getFullYear();
+  ySel.innerHTML = '';
+  for(let yy=y-3; yy<=y+1; yy++){
+    const opt = document.createElement('option');
+    opt.value = String(yy); opt.textContent = String(yy);
+    if(yy === y) opt.selected = true;
+    ySel.appendChild(opt);
+  }
+  const m = String(now.getMonth()+1).padStart(2,'0');
+  const mSel = $('reportMonth');
+  if(mSel) mSel.value = m;
+}
+initReportFilters();
+
+async function getHrConfig(){
+  const fallback = { account:'admin', password:'peihong2026' };
+  try{
+    const r = await supabase.from('hr_settings').select('setting_key,setting_value').in('setting_key',['admin_account','admin_password']);
+    if(r.error || !Array.isArray(r.data)) return fallback;
+    const map = Object.fromEntries(r.data.map(x=>[x.setting_key, x.setting_value]));
+    return { account: map.admin_account || fallback.account, password: map.admin_password || fallback.password };
+  }catch(e){ return fallback; }
+}
+window.reportLogin = async function(){
+  const cfg = await getHrConfig();
+  const account = $('adminAccount').value.trim();
+  const password = $('adminPassword').value;
+  if(account === cfg.account && password === cfg.password){
+    sessionStorage.setItem('peihong_report_login','1');
+    $('loginCard').classList.add('hide'); $('reportCard').classList.remove('hide'); show('報表頁登入成功。');
+  }else show('帳號或密碼錯誤。','bad');
+}
+window.logout = function(){ sessionStorage.removeItem('peihong_report_login'); location.reload(); }
+if(sessionStorage.getItem('peihong_report_login') === '1'){ $('loginCard').classList.add('hide'); $('reportCard').classList.remove('hide'); }
+
+async function fetchAll(table){
+  const rows=[]; let from=0; const step=1000;
+  while(true){
+    const r = await supabase.from(table).select('*').range(from, from+step-1);
+    if(r.error){ console.warn(table, r.error); return rows; }
+    rows.push(...(r.data||[]));
+    if(!r.data || r.data.length < step) break;
+    from += step;
+  }
+  return rows;
+}
+function inRange(dateStr){
+  const d = fmtDate(dateStr); if(!d) return true;
+  const year = $('reportYear')?.value || '';
+  const month = $('reportMonth')?.value || 'all';
+  if(year && !d.startsWith(year + '-')) return false;
+  if(month !== 'all' && d.slice(5,7) !== month) return false;
+  return true;
+}
+function periodLabel(){
+  const year = $('reportYear')?.value || String(new Date().getFullYear());
+  const month = $('reportMonth')?.value || 'all';
+  return month === 'all' ? `${year}_全年` : `${year}_${month}`;
+}
+async function loadAllData(){
+  show('讀取資料中，請稍候...','warn');
+  const [employees, payroll, attendance, leaveReq, overtime] = await Promise.all([
+    fetchAll('employees'), fetchAll('payroll'), fetchAll('attendance'), fetchAll('leave_requests'), fetchAll('overtime_requests')
+  ]);
+  const empMap = Object.fromEntries(employees.map(e => [String(e.id), e]));
+  return { employees, payroll, attendance, leaveReq, overtime, empMap };
+}
+function empName(empMap, id){ const e = empMap[String(id)] || {}; return pick(e,['name','employee_name'],''); }
+function empNo(empMap, id){ const e = empMap[String(id)] || {}; return pick(e,['employee_no','emp_no','code'],''); }
+function makeOverview(data){
+  const active = data.employees.filter(e => pick(e,['is_active'],true) !== false && !pick(e,['termination_date'],''));
+  const payrollInRange = data.payroll.filter(p => inRange(p.created_at || p.payroll_month || p.month));
+  const otInRange = data.overtime.filter(o => inRange(o.overtime_date || o.date || o.created_at));
+  const leaveInRange = data.leaveReq.filter(l => inRange(l.start_date || l.leave_start || l.start_time || l.created_at));
+  const totalSalary = payrollInRange.reduce((s,p)=>s+n(p.net_salary||p.net_pay||p.actual_pay||p.gross_salary||p.base_salary),0);
+  const totalOtPay = otInRange.reduce((s,o)=>s+n(o.overtime_pay||o.calculated_pay||o.pay_amount||o.overtime_amount||o.total_pay),0);
+  const totalOtHours = otInRange.reduce((s,o)=>s+n(o.overtime_hours||o.total_hours||o.calculated_hours),0);
+  const totalLeaveHours = leaveInRange.reduce((s,l)=>s+n(l.leave_hours||l.hours||l.total_hours),0);
+  const leaveRemaining = data.employees.reduce((s,e)=>s+n(e.annual_leave_remaining),0);
+  return [
+    ['項目','數值'],
+    ['員工總數', data.employees.length],
+    ['在職人數', active.length],
+    ['離職/停用人數', data.employees.length-active.length],
+    ['薪資筆數', payrollInRange.length],
+    ['薪資總額', money(totalSalary)],
+    ['加班筆數', otInRange.length],
+    ['加班總時數', money(totalOtHours)],
+    ['加班費總額', money(totalOtPay)],
+    ['請假筆數', leaveInRange.length],
+    ['請假總時數', money(totalLeaveHours)],
+    ['特休剩餘總天數', money(leaveRemaining)],
+    ['匯出時間', new Date().toLocaleString('zh-TW')]
+  ];
+}
+function sheetFromRows(rows){ return XLSX.utils.aoa_to_sheet(rows); }
+function employeesSheet(data){
+  const rows=[['員工編號','姓名','部門','職稱','職等','婚姻','身分證','電話','地址','緊急聯絡人','銀行','銀行代碼','薪轉帳號','金融卡號','本薪','伙食津貼','職務加給','勞保投保','健保投保','勞保扣款','健保扣款','眷屬健保','到職日','離職日','特休總天數','特休已用','特休剩餘','特休期限','狀態']];
+  data.employees.forEach(e=>rows.push([
+    pick(e,['employee_no','emp_no']), pick(e,['name','employee_name']), pick(e,['department']), pick(e,['position','title']), pick(e,['job_grade']), pick(e,['marital_status']), pick(e,['national_id']), pick(e,['phone']), pick(e,['address']), pick(e,['emergency_contact','emergency_contact_name']), pick(e,['bank_name']), pick(e,['bank_code']), pick(e,['bank_account']), pick(e,['bank_card_number','bank_card_no']), n(e.salary), n(e.meal_allowance), n(e.position_allowance), n(e.labor_insured_salary), n(e.health_insured_salary), n(e.labor_insurance), n(e.health_insurance), n(e.dependent_health_insurance), fmtDate(e.hire_date), fmtDate(e.termination_date), n(e.annual_leave_total), n(e.annual_leave_used), n(e.annual_leave_remaining), fmtDate(e.annual_leave_expire_date), (e.is_active===false?'停用':'在職')
+  ]));
+  return rows;
+}
+function payrollSheet(data){
+  const rows=[['月份','員工編號','姓名','本薪','工資基礎','加班費','津貼','勞保','健保','眷屬健保','扣款','應發/總薪資','實發薪資','建立時間']];
+  data.payroll.filter(p=>inRange(p.created_at || p.payroll_month || p.month)).forEach(p=>rows.push([
+    pick(p,['payroll_month','month']), empNo(data.empMap,p.employee_id), empName(data.empMap,p.employee_id), n(p.base_salary), n(p.wage_base_total), n(p.overtime_pay||p.pay_amount||p.calculated_pay), n(p.allowance), n(p.labor_insurance), n(p.health_insurance), n(p.dependent_health_insurance||p.employee_health_total), n(p.deductions||p.deduction_total), n(p.gross_salary||p.gross_pay), n(p.net_salary||p.net_pay), fmtDate(p.created_at)
+  ]));
+  return rows;
+}
+function attendanceSheet(data){
+  const rows=[['日期','員工編號','姓名','上班時間','下班時間','地點/備註','GPS','照片','建立時間']];
+  data.attendance.filter(a=>inRange(a.date || a.work_date || a.created_at || a.check_in_time)).forEach(a=>rows.push([
+    fmtDate(a.date || a.work_date || a.created_at || a.check_in_time), empNo(data.empMap,a.employee_id), empName(data.empMap,a.employee_id), pick(a,['check_in_time','check_in','clock_in']), pick(a,['check_out_time','check_out','clock_out']), pick(a,['location','work_location','note']), [pick(a,['lat','latitude']),pick(a,['lng','longitude'])].filter(Boolean).join(','), pick(a,['photo_url','photo']), fmtDate(a.created_at)
+  ]));
+  return rows;
+}
+function leaveSheet(data){
+  const rows=[['申請日','員工編號','姓名','假別','開始','結束','時數','原因','狀態','審核人','審核時間']];
+  data.leaveReq.filter(l=>inRange(l.start_date || l.leave_start || l.start_time || l.created_at)).forEach(l=>rows.push([
+    fmtDate(l.created_at), empNo(data.empMap,l.employee_id), empName(data.empMap,l.employee_id), pick(l,['leave_type','type']), pick(l,['start_time','leave_start','start_date']), pick(l,['end_time','leave_end','end_date']), n(l.leave_hours||l.hours||l.total_hours), pick(l,['reason','memo']), pick(l,['status','approved_status']), pick(l,['reviewed_by','approved_by']), pick(l,['reviewed_at','approved_at'])
+  ]));
+  return rows;
+}
+function overtimeSheet(data){
+  const rows=[['日期','員工編號','姓名','開始','結束','日別','加班時數','平日前2','平日後續','休息日前2','休息日3-8','休息日9-12','國定假日','例假日','加班費','原因','狀態','審核人','建立時間']];
+  data.overtime.filter(o=>inRange(o.overtime_date || o.date || o.created_at)).forEach(o=>rows.push([
+    fmtDate(o.overtime_date || o.date), empNo(data.empMap,o.employee_id), empName(data.empMap,o.employee_id), fmtTime(o.start_time||o.overtime_start), fmtTime(o.end_time||o.overtime_end), pick(o,['day_type','overtime_day_type','overtime_type']), n(o.overtime_hours||o.total_hours||o.calculated_hours), n(o.weekday_first2_hours), n(o.weekday_after2_hours), n(o.restday_first2_hours), n(o.restday_3to8_hours), n(o.restday_9to12_hours), n(o.holiday_hours), n(o.regular_holiday_hours), money(o.overtime_pay||o.calculated_pay||o.pay_amount||o.overtime_amount||o.total_pay), pick(o,['reason']), pick(o,['status']), pick(o,['reviewed_by','approved_by']), pick(o,['created_at'])
+  ]));
+  return rows;
+}
+function annualLeaveSheet(data){
+  const rows=[['員工編號','姓名','部門','到職日','離職日','特休總天數','已用','剩餘','使用期限','狀態']];
+  data.employees.forEach(e=>rows.push([
+    pick(e,['employee_no','emp_no']), pick(e,['name','employee_name']), pick(e,['department']), fmtDate(e.hire_date), fmtDate(e.termination_date), n(e.annual_leave_total), n(e.annual_leave_used), n(e.annual_leave_remaining), fmtDate(e.annual_leave_expire_date), (e.is_active===false?'停用':'在職')
+  ]));
+  return rows;
+}
+function addSheet(wb, name, rows){
+  const ws = Array.isArray(rows?.[0]) ? sheetFromRows(rows) : XLSX.utils.json_to_sheet(rows || []);
+  XLSX.utils.book_append_sheet(wb, ws, name.slice(0,31));
+}
+window.loadPreview = async function(){
+  const d = await loadAllData();
+  $('preview').innerHTML = `<table><tr><th>資料表</th><th>筆數</th></tr><tr><td>員工</td><td>${d.employees.length}</td></tr><tr><td>薪資</td><td>${d.payroll.length}</td></tr><tr><td>打卡</td><td>${d.attendance.length}</td></tr><tr><td>請假</td><td>${d.leaveReq.length}</td></tr><tr><td>加班</td><td>${d.overtime.length}</td></tr></table>`;
+  show('預覽完成。');
+}
+window.exportFullReport = async function(){
+  try{
+    const d = await loadAllData();
+    const wb = XLSX.utils.book_new();
+    addSheet(wb,'儀表總覽', makeOverview(d));
+    addSheet(wb,'員工資料', employeesSheet(d));
+    addSheet(wb,'薪資總表', payrollSheet(d));
+    addSheet(wb,'打卡明細', attendanceSheet(d));
+    addSheet(wb,'請假明細', leaveSheet(d));
+    addSheet(wb,'加班明細', overtimeSheet(d));
+    addSheet(wb,'特休明細', annualLeaveSheet(d));
+    const ymd = new Date().toISOString().slice(0,10).replaceAll('-','');
+    XLSX.writeFile(wb, `沛鴻_HR完整總報表_${periodLabel()}_${ymd}.xlsx`);
+    show('Excel 已產生下載。');
+  }catch(e){ console.error(e); show('匯出失敗：'+(e.message||e),'bad'); }
+}
+</script>
+</body>
+</html>

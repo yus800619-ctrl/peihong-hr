@@ -16,7 +16,7 @@ label{font-size:14px;font-weight:800;color:#334155}table{width:100%;border-colla
 @media(max-width:700px){.nav{align-items:flex-start}h1{font-size:26px}.wrap{padding:10px}.card{padding:16px;border-radius:20px}}
 </style></head><body>
 <div id="versionTopBanner" class="hide" style="background:#16a34a;color:white;font-weight:900;text-align:center;padding:14px;font-size:20px;">
-  沛鴻 HR Web V36｜安全版報表中心
+  沛鴻 HR Web V35｜15分鐘單位加班費連動版
 </div>
 
 
@@ -97,11 +97,11 @@ label{font-size:14px;font-weight:800;color:#334155}table{width:100%;border-colla
   <div id="editEmpInsurancePreview" class="ok">可手動輸入勞健保投保金額；留空或0則依本薪自動試算。津貼只影響加班時薪。</div>
   <button onclick="saveEmployeeEdit()">儲存員工資料</button>
   <button class="btn2" onclick="cancelEmployeeEdit()">取消</button>
-</div><div class="card"><h2>報表中心 / Excel 匯出</h2><div class="ok">V36 安全版：只讀取資料並匯出，不修改薪資、加班、請假、特休、投保或登入邏輯。</div><div class="grid grid3"><button class="btn2" onclick="exportEmployeeReport()">匯出員工資料</button><button class="btn2" onclick="exportPayrollReport()">匯出薪資總表</button><button class="btn2" onclick="exportAttendanceReport()">匯出打卡明細</button><button class="btn2" onclick="exportLeaveReport()">匯出請假明細</button><button class="btn2" onclick="exportOvertimeReport()">匯出加班明細</button><button class="btn2" onclick="exportAnnualLeaveReport()">匯出特休明細</button><button class="btnGreen" onclick="exportAllReports()">一鍵全部匯出</button></div><p class="muted">Excel 若顯示安全提示，請選擇信任/開啟即可。檔案以 .xls 格式匯出，Excel 可直接開啟。</p></div><div class="card"><h2>出勤紀錄</h2><div id="attendanceTable" class="scroll"></div></div><div class="card"><h2>請假審核</h2><div id="leaveTable" class="scroll"></div></div><div class="card"><h2>加班審核</h2><div id="overtimeTable" class="scroll"></div></div><div class="card"><h2>產生薪資</h2>
+</div><div class="card"><h2>出勤紀錄</h2><div id="attendanceTable" class="scroll"></div></div><div class="card"><h2>請假審核</h2><div id="leaveTable" class="scroll"></div></div><div class="card"><h2>加班審核</h2><div id="overtimeTable" class="scroll"></div></div><div class="card"><h2>產生薪資</h2>
 <div class="ok">V35 薪資規則：員工加班單只填日期、開始時間、結束時間與原因；系統依 09:00–17:00 表定工時、17:00 後起算，每滿15分鐘計0.25小時，不足15分鐘不計，自動拆分平日前2小時/後續小時並帶入加班費。HR 可於加班審核表調整當日類型為平日、休息日、國定假日、例假日。</div><div class="ok">勞保、健保投保金額可自動試算，也可由 HR 手動輸入投保金額；手動輸入後系統依手動投保金額計算扣款。</div><div class="warn">如果員工下拉空白，請按「重新整理後台資料」或「補齊員工帳密」。</div><div class="grid grid3"><div><label>員工</label><select id="payEmpSelect" onchange="updatePayrollInputsAuto()"></select></div><div><label>月份</label><input id="payMonth" type="month" onchange="updatePayrollInputsAuto()" /></div><div><label>加班費</label><input id="payOvertime" type="number" value="0" readonly /><div class="muted" id="payOvertimeAutoTip">依核准加班申請自動帶入</div></div><div><label>加班時薪</label><input id="payHourlyRate" type="number" value="0" step="0.01" readonly /><div class="muted">依選取員工工資基礎自動換算</div></div><div><label>加班倍率</label><input id="payOtMultiplier" type="number" value="1.34" step="0.01" /></div><div><label>雜費補助/津貼</label><input id="payAllowance" type="number" value="0" /></div><div><label>年中獎金</label><input id="payMidBonus" type="number" value="0" /></div><div><label>年終獎金</label><input id="payYearBonus" type="number" value="0" /></div><div><label>三節獎金</label><input id="payFestivalBonus" type="number" value="0" /></div><div><label>浮動獎金</label><input id="payVariableBonus" type="number" value="0" /></div><div><label>其他不列入工資</label><input id="payOtherNonWage" type="number" value="0" /></div><div><label>其他扣款</label><input id="payDeductions" type="number" value="0" /></div>
 <div><label>事假扣薪比例</label><input id="payPersonalRate" type="number" value="1" step="0.01" /></div>
 <div><label>病假扣薪比例</label><input id="paySickRate" type="number" value="0.5" step="0.01" /></div></div><button class="btnGreen" onclick="autoCalculatePayroll()">自動計算薪資</button><div id="payrollCalcDetail" class="scroll"></div><button class="btn2" onclick="fillApprovedOvertimePay()">帶入核准加班費</button><button onclick="createPayroll()">手動產生薪資</button><button class="btn2" onclick="loadInsuranceTotals()">勞健保總額統計</button><div id="insuranceTotals" class="scroll"></div></div><div class="card"><h2>薪資紀錄</h2><div id="payrollTable" class="scroll"></div></div></section>
-<section id="page-install" class="page hide"><div class="card"><h1>手機安裝方式</h1><div class="grid grid2"><div><h2>Android</h2><ol class="muted"><li>用 Chrome 開啟本網址</li><li>點右上角選單</li><li>選「安裝應用程式」或「加入主畫面」</li></ol></div><div><h2>iPhone</h2><ol class="muted"><li>用 Safari 開啟本網址</li><li>點分享按鈕</li><li>選「加入主畫面」</li></ol></div></div><div class="warn">請不要用 LINE 內建瀏覽器安裝；打卡需要允許 GPS 與相機權限。</div></div></section><div id="versionInfoCard" class="wrap hide"><div class="card"><b>版本：</b>沛鴻 HR Web V36｜新增報表中心與 Excel 匯出；不更動薪資、加班、請假、投保與登入核心邏輯。</div></div></main>
+<section id="page-install" class="page hide"><div class="card"><h1>手機安裝方式</h1><div class="grid grid2"><div><h2>Android</h2><ol class="muted"><li>用 Chrome 開啟本網址</li><li>點右上角選單</li><li>選「安裝應用程式」或「加入主畫面」</li></ol></div><div><h2>iPhone</h2><ol class="muted"><li>用 Safari 開啟本網址</li><li>點分享按鈕</li><li>選「加入主畫面」</li></ol></div></div><div class="warn">請不要用 LINE 內建瀏覽器安裝；打卡需要允許 GPS 與相機權限。</div></div></section><div id="versionInfoCard" class="wrap hide"><div class="card"><b>版本：</b>沛鴻 HR Web V35｜員工加班單自動拆分時段；09:00–17:00表定工時；17:00後以15分鐘為單位計算；加班費自動帶入薪資。</div></div></main>
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const supabase = createClient('https://mhsasrjpuottlmhsutnb.supabase.co', 'sb_publishable_2lGa4xcG6gxuFTYas0A0Bw_1I56RG5I');
@@ -1280,111 +1280,6 @@ window.deleteEmployee = async function(id){
   await loadAdminAll();
 }
 
-
-function reportValue(row, keys, fallback=''){
-  for(const key of keys){
-    const v = row?.[key];
-    if(v !== undefined && v !== null && v !== '') return v;
-  }
-  return fallback;
-}
-function reportEmployeeName(row){
-  const emp = row?.employees || {};
-  return [emp.employee_no || row?.employee_no || '', emp.name || row?.name || ''].filter(Boolean).join(' ');
-}
-function htmlEscape(v){
-  return String(v ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
-}
-function downloadExcelHtml(filename, headers, rows){
-  const tableHtml = '<table border="1"><thead><tr>' + headers.map(h=>`<th>${htmlEscape(h)}</th>`).join('') + '</tr></thead><tbody>' +
-    rows.map(row => '<tr>' + row.map(v=>`<td>${htmlEscape(v)}</td>`).join('') + '</tr>').join('') + '</tbody></table>';
-  const htmlDoc = `<!doctype html><html><head><meta charset="UTF-8"></head><body>${tableHtml}</body></html>`;
-  const blob = new Blob(['﻿' + htmlDoc], {type:'application/vnd.ms-excel;charset=utf-8'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename.endsWith('.xls') ? filename : filename + '.xls';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-async function safeSelect(tableName, selectText='*', orderCol='created_at'){
-  let q = supabase.from(tableName).select(selectText);
-  if(orderCol) q = q.order(orderCol,{ascending:false});
-  const r = await q.limit(5000);
-  if(r.error) throw new Error(`${tableName} 讀取失敗：${r.error.message}`);
-  return r.data || [];
-}
-window.exportEmployeeReport = async function(){
-  if(!hrLoginPrompt()) return;
-  try{
-    const rows = await safeSelect('employees','*','employee_no');
-    downloadExcelHtml('員工資料總表.xls', ['員工編號','姓名','部門','職稱','職等','婚姻','身分證','電話','地址','緊急聯絡人','銀行名稱','銀行代碼','銀行帳號','金融卡號','本薪','伙食津貼','職務加給','固定油資','固定績效','其他固定津貼','勞保投保','健保投保','手動投保','勞保扣款','健保扣款','眷屬健保','眷屬人數','到職日','離職日','特休總數','特休已用','特休剩餘','特休期限','狀態'],
-      rows.map(e=>[e.employee_no,e.name,e.department,e.position,e.job_grade,e.marital_status,e.national_id,e.phone,e.address,reportValue(e,['emergency_contact','emergency_contact_name']),e.bank_name,e.bank_code,e.bank_account,reportValue(e,['bank_card_number','bank_card_no']),e.salary,e.meal_allowance,e.position_allowance,e.fixed_fuel_allowance,e.fixed_performance_bonus,e.other_fixed_allowance,e.labor_insured_salary,e.health_insured_salary,e.insurance_manual_override?'是':'否',e.labor_insurance,e.health_insurance,e.dependent_health_insurance,e.health_dependents_count,e.hire_date,e.termination_date,e.annual_leave_total,e.annual_leave_used,e.annual_leave_remaining,e.annual_leave_expire_date,e.is_active===false?'停用':'在職'])
-    );
-    msg('員工資料 Excel 已匯出');
-  }catch(err){ msg(err.message || String(err),'bad'); }
-};
-window.exportPayrollReport = async function(){
-  if(!hrLoginPrompt()) return;
-  try{
-    const rows = await safeSelect('payroll','*, employees(employee_no,name,department,job_grade,bank_name,bank_account)','created_at');
-    downloadExcelHtml('薪資總表.xls', ['月份','員工編號','姓名','部門','職等','本薪','加班費','津貼','勞保','健保','眷屬健保','扣款','應發/總額','實發','銀行','帳號','建立時間'],
-      rows.map(p=>[p.payroll_month,p.employees?.employee_no,p.employees?.name,p.employees?.department,p.employees?.job_grade,p.base_salary,p.overtime_pay,p.allowance,p.labor_insurance,p.health_insurance,p.dependent_health_insurance,p.deductions,reportValue(p,['gross_salary','gross_pay','total_salary'],''),p.net_salary,p.employees?.bank_name,p.employees?.bank_account,fmtTW(p.created_at)])
-    );
-    msg('薪資總表 Excel 已匯出');
-  }catch(err){ msg(err.message || String(err),'bad'); }
-};
-window.exportAttendanceReport = async function(){
-  if(!hrLoginPrompt()) return;
-  try{
-    const rows = await safeSelect('attendance','*, employees(employee_no,name,department)','created_at');
-    downloadExcelHtml('打卡明細.xls', ['員工編號','姓名','部門','上班時間','下班時間','工作地點','GPS Lat','GPS Lng','狀態','建立時間'],
-      rows.map(x=>[x.employees?.employee_no,x.employees?.name,x.employees?.department,fmtTW(x.check_in),fmtTW(x.check_out),x.work_location,x.gps_lat,x.gps_lng,x.status,fmtTW(x.created_at)])
-    );
-    msg('打卡明細 Excel 已匯出');
-  }catch(err){ msg(err.message || String(err),'bad'); }
-};
-window.exportLeaveReport = async function(){
-  if(!hrLoginPrompt()) return;
-  try{
-    const rows = await safeSelect('leave_requests','*, employees(employee_no,name,department)','created_at');
-    downloadExcelHtml('請假明細.xls', ['員工編號','姓名','部門','假別','開始','結束','時數/天數','原因','狀態','審核人','建立時間'],
-      rows.map(x=>[x.employees?.employee_no,x.employees?.name,x.employees?.department,x.leave_type,fmtTW(x.start_date),fmtTW(x.end_date),reportValue(x,['leave_hours','hours','leave_days','days'],''),x.reason,x.status,x.reviewed_by,fmtTW(x.created_at)])
-    );
-    msg('請假明細 Excel 已匯出');
-  }catch(err){ msg(err.message || String(err),'bad'); }
-};
-window.exportOvertimeReport = async function(){
-  if(!hrLoginPrompt()) return;
-  try{
-    const rows = await safeSelect('overtime_requests','*, employees(employee_no,name,department)','created_at');
-    downloadExcelHtml('加班明細.xls', ['員工編號','姓名','部門','日期','開始','結束','當日類型','加班時數','加班費','前2小時','後續小時','休息日前2','休息日3-8','休息日9-12','國定假日','例假日','原因','狀態','審核人','建立時間'],
-      rows.map(x=>[x.employees?.employee_no,x.employees?.name,x.employees?.department,x.overtime_date,String(reportValue(x,['start_time','overtime_start'])).slice(0,5),String(reportValue(x,['end_time','overtime_end'])).slice(0,5),reportValue(x,['overtime_day_type','day_type']),reportValue(x,['overtime_hours','total_hours','calculated_hours'],0),getOvertimePayValue(x),reportValue(x,['weekday_first2_hours'],0),reportValue(x,['weekday_after2_hours'],0),reportValue(x,['restday_first2_hours'],0),reportValue(x,['restday_3to8_hours'],0),reportValue(x,['restday_9to12_hours'],0),reportValue(x,['holiday_hours'],0),reportValue(x,['regular_holiday_hours'],0),x.reason,x.status,x.reviewed_by,fmtTW(x.created_at)])
-    );
-    msg('加班明細 Excel 已匯出');
-  }catch(err){ msg(err.message || String(err),'bad'); }
-};
-window.exportAnnualLeaveReport = async function(){
-  if(!hrLoginPrompt()) return;
-  try{
-    const rows = await safeSelect('employees','*','employee_no');
-    downloadExcelHtml('特休明細.xls', ['員工編號','姓名','部門','到職日','離職日','特休總天數','已使用','剩餘','使用期限','狀態'],
-      rows.map(e=>[e.employee_no,e.name,e.department,e.hire_date,e.termination_date,e.annual_leave_total,e.annual_leave_used,e.annual_leave_remaining,e.annual_leave_expire_date,e.is_active===false?'停用':'在職'])
-    );
-    msg('特休明細 Excel 已匯出');
-  }catch(err){ msg(err.message || String(err),'bad'); }
-};
-window.exportAllReports = async function(){
-  if(!hrLoginPrompt()) return;
-  await exportEmployeeReport();
-  setTimeout(exportPayrollReport, 300);
-  setTimeout(exportAttendanceReport, 600);
-  setTimeout(exportLeaveReport, 900);
-  setTimeout(exportOvertimeReport, 1200);
-  setTimeout(exportAnnualLeaveReport, 1500);
-};
 async function loadPayrollTable(){let r=await supabase.from('payroll').select('*, employees(employee_no,name)').order('created_at',{ascending:false}).limit(100);if(r.error)return;$('payrollTable').innerHTML=table(['月份','員工','本薪','加班','津貼','扣款','勞健保眷屬','實發','操作'],(r.data||[]).map(p=>[p.payroll_month,(p.employees?.employee_no||'')+' '+(p.employees?.name||''),'$'+money(p.base_salary),'$'+money(p.overtime_pay),'$'+money(p.allowance),'$'+money(p.deductions),'$'+money(+p.labor_insurance+ +p.health_insurance+ +p.dependent_health_insurance),'$'+money(p.net_salary),`<button class="btnRed" onclick="deletePayroll('${p.id}')">刪除</button>`]))}
 window.addEventListener('load',()=>{ loadEmployees().then(updatePayrollHourlyRate); attachInsuranceAutoSync('newEmp'); ['HireDate','AnnualLeaveTotal','AnnualLeaveUsed'].forEach(k=>{ const el=$('newEmp'+k); if(el){ el.addEventListener('input',()=>syncAnnualLeave('newEmp')); el.addEventListener('change',()=>syncAnnualLeave('newEmp')); }}); syncAnnualLeave('newEmp'); });
 </script></body></html>
