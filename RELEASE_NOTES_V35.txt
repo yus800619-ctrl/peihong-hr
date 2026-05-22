@@ -1,0 +1,6 @@
+V35 更新：
+- 加班費改為以15分鐘為單位計算。
+- 17:00後起算，每滿15分鐘計0.25小時，不足15分鐘不計。
+- 加班費於 overtime_pay / calculated_pay / pay_amount / overtime_amount / total_pay 同步寫入。
+- 薪資產生頁會自動帶入核准加班費。
+- 保留 HR 後台調整平日、休息日、國定假日、例假日類型。

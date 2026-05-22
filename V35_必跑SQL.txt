@@ -1,0 +1,240 @@
+-- V35：加班費以15分鐘為單位計算 + 加班費自動連動薪資
+-- 規則：09:00–17:00為表定工時；17:00後起算；每滿15分鐘計0.25小時，不足15分鐘不計。
+
+alter table overtime_requests add column if not exists overtime_breakdown jsonb default '{}'::jsonb;
+alter table overtime_requests add column if not exists overtime_day_type text default 'weekday';
+alter table overtime_requests add column if not exists day_type text default 'weekday';
+alter table overtime_requests add column if not exists start_time time;
+alter table overtime_requests add column if not exists end_time time;
+alter table overtime_requests add column if not exists overtime_start time;
+alter table overtime_requests add column if not exists overtime_end time;
+alter table overtime_requests add column if not exists overtime_hours numeric default 0;
+alter table overtime_requests add column if not exists total_hours numeric default 0;
+alter table overtime_requests add column if not exists calculated_hours numeric default 0;
+alter table overtime_requests add column if not exists overtime_type text default 'auto';
+alter table overtime_requests add column if not exists weekday_first2_hours numeric default 0;
+alter table overtime_requests add column if not exists weekday_after2_hours numeric default 0;
+alter table overtime_requests add column if not exists restday_first2_hours numeric default 0;
+alter table overtime_requests add column if not exists restday_3to8_hours numeric default 0;
+alter table overtime_requests add column if not exists restday_9to12_hours numeric default 0;
+alter table overtime_requests add column if not exists holiday_hours numeric default 0;
+alter table overtime_requests add column if not exists regular_holiday_hours numeric default 0;
+alter table overtime_requests add column if not exists overtime_pay numeric default 0;
+alter table overtime_requests add column if not exists calculated_pay numeric default 0;
+alter table overtime_requests add column if not exists pay_amount numeric default 0;
+alter table overtime_requests add column if not exists overtime_amount numeric default 0;
+alter table overtime_requests add column if not exists total_pay numeric default 0;
+
+create or replace function peihong_overtime_hours_after_17_v35(
+  p_start time,
+  p_end time
+)
+returns numeric
+language plpgsql
+immutable
+as $$
+declare
+  s interval;
+  e interval;
+  base interval := interval '17 hours';
+  minutes numeric;
+  units numeric;
+begin
+  if p_start is null or p_end is null then
+    return 0;
+  end if;
+
+  s := p_start - time '00:00';
+  e := p_end - time '00:00';
+
+  if s < base then
+    s := base;
+  end if;
+
+  if e <= s then
+    e := e + interval '24 hours';
+  end if;
+
+  if e <= s then
+    return 0;
+  end if;
+
+  minutes := extract(epoch from (e - s)) / 60.0;
+  units := floor(minutes / 15.0);
+
+  return round((units * 0.25)::numeric, 2);
+end;
+$$;
+
+create or replace function peihong_normalize_overtime_day_type_v35(p_day_type text)
+returns text
+language sql
+immutable
+as $$
+  select case
+    when p_day_type in ('restday','rest_day') then 'rest_day'
+    when p_day_type in ('holiday','national_holiday') then 'national_holiday'
+    when p_day_type in ('regular_holiday') then 'regular_holiday'
+    else 'weekday'
+  end;
+$$;
+
+create or replace function peihong_sync_overtime_all_v35()
+returns trigger
+language plpgsql
+as $$
+declare
+  emp employees%rowtype;
+  hrs numeric;
+  daytype text;
+  wage_base numeric;
+  hourly_rate numeric;
+  pay numeric;
+  weekday_first2 numeric := 0;
+  weekday_after2 numeric := 0;
+  rest_first2 numeric := 0;
+  rest_3to8 numeric := 0;
+  rest_9to12 numeric := 0;
+  holiday_within8 numeric := 0;
+  holiday_after8_first2 numeric := 0;
+  holiday_after8_after2 numeric := 0;
+  regular_emergency numeric := 0;
+  regular_after8_first2 numeric := 0;
+  regular_after8_after2 numeric := 0;
+begin
+  hrs := peihong_overtime_hours_after_17_v35(
+    coalesce(new.start_time, new.overtime_start),
+    coalesce(new.end_time, new.overtime_end)
+  );
+
+  daytype := peihong_normalize_overtime_day_type_v35(coalesce(new.overtime_day_type, new.day_type, 'weekday'));
+
+  new.overtime_hours := hrs;
+  new.total_hours := hrs;
+  new.calculated_hours := hrs;
+  new.day_type := daytype;
+  new.overtime_day_type := daytype;
+  new.overtime_type := 'auto';
+
+  if daytype = 'weekday' then
+    weekday_first2 := least(hrs, 2);
+    weekday_after2 := greatest(hrs - 2, 0);
+  elsif daytype = 'rest_day' then
+    rest_first2 := least(hrs, 2);
+    rest_3to8 := least(greatest(hrs - 2, 0), 6);
+    rest_9to12 := greatest(hrs - 8, 0);
+  elsif daytype = 'national_holiday' then
+    holiday_within8 := least(hrs, 8);
+    holiday_after8_first2 := least(greatest(hrs - 8, 0), 2);
+    holiday_after8_after2 := greatest(hrs - 10, 0);
+  elsif daytype = 'regular_holiday' then
+    regular_emergency := least(hrs, 8);
+    regular_after8_first2 := least(greatest(hrs - 8, 0), 2);
+    regular_after8_after2 := greatest(hrs - 10, 0);
+  end if;
+
+  new.weekday_first2_hours := weekday_first2;
+  new.weekday_after2_hours := weekday_after2;
+  new.restday_first2_hours := rest_first2;
+  new.restday_3to8_hours := rest_3to8;
+  new.restday_9to12_hours := rest_9to12;
+  new.holiday_hours := holiday_within8;
+  new.regular_holiday_hours := regular_emergency;
+
+  select * into emp
+  from employees
+  where id = new.employee_id;
+
+  wage_base :=
+    coalesce(emp.salary,0)
+    + coalesce(emp.meal_allowance,0)
+    + coalesce(emp.position_allowance,0)
+    + coalesce(emp.fixed_fuel_allowance,0)
+    + coalesce(emp.fixed_performance_bonus,0)
+    + coalesce(emp.other_fixed_allowance,0);
+
+  hourly_rate := case when wage_base > 0 then wage_base / 240 else 0 end;
+
+  pay :=
+      weekday_first2 * hourly_rate * 1.34
+    + weekday_after2 * hourly_rate * 1.67
+    + rest_first2 * hourly_rate * 1.34
+    + rest_3to8 * hourly_rate * 1.67
+    + rest_9to12 * hourly_rate * 2.67
+    + (case when holiday_within8 > 0 then hourly_rate * 8 else 0 end)
+    + holiday_after8_first2 * hourly_rate * 1.34
+    + holiday_after8_after2 * hourly_rate * 1.67
+    + regular_emergency * hourly_rate * 2
+    + regular_after8_first2 * hourly_rate * 1.34
+    + regular_after8_after2 * hourly_rate * 1.67;
+
+  pay := round(coalesce(pay,0), 2);
+
+  new.overtime_pay := pay;
+  new.calculated_pay := pay;
+  new.pay_amount := pay;
+  new.overtime_amount := pay;
+  new.total_pay := pay;
+
+  new.overtime_breakdown := jsonb_build_object(
+    'day_type', daytype,
+    'total_hours', hrs,
+    'wage_base', wage_base,
+    'hourly_rate', round(hourly_rate, 2),
+    'overtime_pay', pay,
+    'weekday_first2', weekday_first2,
+    'weekday_after2', weekday_after2,
+    'rest_first2', rest_first2,
+    'rest_3to8', rest_3to8,
+    'rest_9to12', rest_9to12,
+    'holiday_within8', holiday_within8,
+    'holiday_after8_first2', holiday_after8_first2,
+    'holiday_after8_after2', holiday_after8_after2,
+    'regular_emergency', regular_emergency,
+    'regular_after8_first2', regular_after8_first2,
+    'regular_after8_after2', regular_after8_after2,
+    'weekday_first2_hours', weekday_first2,
+    'weekday_after2_hours', weekday_after2,
+    'restday_first2_hours', rest_first2,
+    'restday_3to8_hours', rest_3to8,
+    'restday_9to12_hours', rest_9to12,
+    'holiday_hours', holiday_within8,
+    'regular_holiday_hours', regular_emergency
+  );
+
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_peihong_sync_overtime_breakdown_v30 on overtime_requests;
+drop trigger if exists trg_peihong_sync_overtime_all_v31 on overtime_requests;
+drop trigger if exists trg_peihong_sync_overtime_all_v32 on overtime_requests;
+drop trigger if exists trg_peihong_sync_overtime_all_v33 on overtime_requests;
+drop trigger if exists trg_peihong_sync_overtime_all_v35 on overtime_requests;
+
+create trigger trg_peihong_sync_overtime_all_v35
+before insert or update
+on overtime_requests
+for each row
+execute function peihong_sync_overtime_all_v35();
+
+-- 重算舊資料，讓已核准加班費也會帶入薪資
+update overtime_requests
+set start_time = start_time;
+
+grant select, insert, update, delete on overtime_requests to anon, authenticated;
+notify pgrst, 'reload schema';
+
+select
+  overtime_date,
+  start_time,
+  end_time,
+  overtime_day_type,
+  overtime_hours,
+  overtime_pay,
+  calculated_pay,
+  pay_amount,
+  overtime_breakdown
+from overtime_requests
+order by created_at desc
+limit 10;
