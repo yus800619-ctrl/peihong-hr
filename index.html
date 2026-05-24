@@ -16,7 +16,7 @@ label{font-size:14px;font-weight:800;color:#334155}table{width:100%;border-colla
 @media(max-width:700px){.nav{align-items:flex-start}h1{font-size:26px}.wrap{padding:10px}.card{padding:16px;border-radius:20px}}
 </style><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script></head><body>
 <div id="versionTopBanner" class="hide" style="background:#16a34a;color:white;font-weight:900;text-align:center;padding:14px;font-size:20px;">
-  沛鴻 HR Web V37.1｜薪資連動修復版
+  沛鴻 HR Web V37.2｜Excel打卡匯入版
 </div>
 
 
@@ -97,7 +97,7 @@ label{font-size:14px;font-weight:800;color:#334155}table{width:100%;border-colla
   <div id="editEmpInsurancePreview" class="ok">可手動輸入勞健保投保金額；留空或0則依本薪自動試算。津貼只影響加班時薪。</div>
   <button onclick="saveEmployeeEdit()">儲存員工資料</button>
   <button class="btn2" onclick="cancelEmployeeEdit()">取消</button>
-</div><div class="card"><h2>出勤紀錄</h2><div id="attendanceTable" class="scroll"></div></div><div class="card"><h2>請假審核</h2><div id="leaveTable" class="scroll"></div></div><div class="card"><h2>加班審核</h2><div id="overtimeTable" class="scroll"></div></div>
+</div><div class="card"><h2>出勤紀錄</h2><div id="attendanceTable" class="scroll"></div></div><div class="card"><h2>Excel打卡匯入</h2><div class="ok">V37.2：支援「沛鴻聚合工程有限公司_打卡紀錄」格式；同員工同日期會自動合併上下班。</div><label>選擇打卡Excel（.xlsx）</label><input id="attendanceExcelInput" type="file" accept=".xlsx,.xls" /><div class="grid grid2"><button class="btn2" onclick="previewAttendanceExcelImport()">預覽匯入</button><button class="btnGreen" onclick="confirmAttendanceExcelImport()">確認寫入出勤</button></div><div class="warn">匯入只新增/更新出勤資料，不修改登入、打卡、請假、報表、勞健保與薪資公式。若同員工同日期已有資料，會先在預覽標示。</div><div id="attendanceImportSummary" class="muted"></div><div id="attendanceImportPreview" class="scroll"></div></div><div class="card"><h2>請假審核</h2><div id="leaveTable" class="scroll"></div></div><div class="card"><h2>加班審核</h2><div id="overtimeTable" class="scroll"></div></div>
 <div class="card" id="hrReportCenterCard">
   <h2>📊 報表中心</h2>
   <div class="ok">安全匯出：只讀取資料，不修改薪資、加班、請假、投保或員工資料。</div>
@@ -136,7 +136,7 @@ label{font-size:14px;font-weight:800;color:#334155}table{width:100%;border-colla
 <div class="ok">V37 薪資規則：員工加班單只填日期、開始時間、結束時間與原因；系統依 09:00–17:00 表定工時、17:00 後起算，每滿15分鐘計0.25小時，不足15分鐘不計，自動拆分平日前2小時/後續小時並帶入加班費。HR 可於加班審核表調整當日類型為平日、休息日、國定假日、例假日。</div><div class="ok">勞保、健保投保金額可自動試算，也可由 HR 手動輸入投保金額；手動輸入後系統依手動投保金額計算扣款。</div><div class="warn">如果員工下拉空白，請按「重新整理後台資料」或「補齊員工帳密」。</div><div class="grid grid3"><div><label>員工</label><select id="payEmpSelect" onchange="updatePayrollInputsAuto()"></select></div><div><label>月份</label><input id="payMonth" type="month" onchange="updatePayrollInputsAuto()" /></div><div><label>加班費</label><input id="payOvertime" type="number" value="0" readonly /><div class="muted" id="payOvertimeAutoTip">依核准加班申請自動帶入</div></div><div><label>加班時薪</label><input id="payHourlyRate" type="number" value="0" step="0.01" readonly /><div class="muted">依選取員工工資基礎自動換算</div></div><div><label>加班倍率</label><input id="payOtMultiplier" type="number" value="1.34" step="0.01" /></div><div><label>雜費補助/津貼</label><input id="payAllowance" type="number" value="0" /></div><div><label>年中獎金</label><input id="payMidBonus" type="number" value="0" /></div><div><label>年終獎金</label><input id="payYearBonus" type="number" value="0" /></div><div><label>三節獎金</label><input id="payFestivalBonus" type="number" value="0" /></div><div><label>浮動獎金</label><input id="payVariableBonus" type="number" value="0" /></div><div><label>其他不列入工資</label><input id="payOtherNonWage" type="number" value="0" /></div><div><label>其他扣款</label><input id="payDeductions" type="number" value="0" /></div>
 <div><label>事假扣薪比例</label><input id="payPersonalRate" type="number" value="1" step="0.01" /></div>
 <div><label>病假扣薪比例</label><input id="paySickRate" type="number" value="0.5" step="0.01" /></div></div><button class="btnGreen" onclick="autoCalculatePayroll()">自動計算薪資</button><div id="payrollCalcDetail" class="scroll"></div><button class="btn2" onclick="fillApprovedOvertimePay()">帶入核准加班費</button><button onclick="createPayroll()">手動產生薪資</button><button class="btn2" onclick="loadInsuranceTotals()">勞健保總額統計</button><div id="insuranceTotals" class="scroll"></div></div><div class="card"><h2>薪資紀錄</h2><div id="payrollTable" class="scroll"></div></div></section>
-<section id="page-install" class="page hide"><div class="card"><h1>手機安裝方式</h1><div class="grid grid2"><div><h2>Android</h2><ol class="muted"><li>用 Chrome 開啟本網址</li><li>點右上角選單</li><li>選「安裝應用程式」或「加入主畫面」</li></ol></div><div><h2>iPhone</h2><ol class="muted"><li>用 Safari 開啟本網址</li><li>點分享按鈕</li><li>選「加入主畫面」</li></ol></div></div><div class="warn">請不要用 LINE 內建瀏覽器安裝；打卡需要允許 GPS 與相機權限。</div></div></section><div id="versionInfoCard" class="wrap hide"><div class="card"><b>版本：</b>沛鴻 HR Web V37.1｜修復薪資頁加班費與請假扣款自動帶入，保留報表中心。</div></div></main>
+<section id="page-install" class="page hide"><div class="card"><h1>手機安裝方式</h1><div class="grid grid2"><div><h2>Android</h2><ol class="muted"><li>用 Chrome 開啟本網址</li><li>點右上角選單</li><li>選「安裝應用程式」或「加入主畫面」</li></ol></div><div><h2>iPhone</h2><ol class="muted"><li>用 Safari 開啟本網址</li><li>點分享按鈕</li><li>選「加入主畫面」</li></ol></div></div><div class="warn">請不要用 LINE 內建瀏覽器安裝；打卡需要允許 GPS 與相機權限。</div></div></section><div id="versionInfoCard" class="wrap hide"><div class="card"><b>版本：</b>沛鴻 HR Web V37.2｜新增Excel打卡匯入，保留薪資連動修復與報表中心。</div></div></main>
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const supabase = createClient('https://mhsasrjpuottlmhsutnb.supabase.co', 'sb_publishable_2lGa4xcG6gxuFTYas0A0Bw_1I56RG5I');
@@ -696,6 +696,180 @@ async function loadEmployeeTable(){
       `<button onclick="editEmployee('${e.id}')">編輯</button><button class="btn2" onclick="quickSalaryEdit('${e.id}')">快速改薪</button><button class="btnRed" onclick="deleteEmployee('${e.id}')">刪除</button>`
     ])
   );
+}
+
+
+let pendingAttendanceImportRows = [];
+function excelCellText(v){
+  if(v === null || v === undefined) return '';
+  if(v instanceof Date && !isNaN(v)){
+    const y=v.getFullYear(), m=String(v.getMonth()+1).padStart(2,'0'), d=String(v.getDate()).padStart(2,'0');
+    const hh=String(v.getHours()).padStart(2,'0'), mm=String(v.getMinutes()).padStart(2,'0');
+    if(hh !== '00' || mm !== '00') return `${hh}:${mm}`;
+    return `${y}/${m}/${d}`;
+  }
+  return String(v).trim();
+}
+function normalizeExcelDate(v){
+  if(v === null || v === undefined || v === '' || v === '--') return '';
+  if(v instanceof Date && !isNaN(v)){
+    return `${v.getFullYear()}-${String(v.getMonth()+1).padStart(2,'0')}-${String(v.getDate()).padStart(2,'0')}`;
+  }
+  if(typeof v === 'number'){
+    const d = XLSX.SSF.parse_date_code(v);
+    if(d) return `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`;
+  }
+  const s = String(v).trim().replace(/[年月]/g,'/').replace('日','').replace(/-/g,'/');
+  const m = s.match(/(\d{4})\/(\d{1,2})\/(\d{1,2})/);
+  if(!m) return '';
+  return `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+}
+function normalizeExcelTime(v){
+  if(v === null || v === undefined || v === '' || v === '--') return '';
+  if(v instanceof Date && !isNaN(v)) return `${String(v.getHours()).padStart(2,'0')}:${String(v.getMinutes()).padStart(2,'0')}`;
+  if(typeof v === 'number'){
+    const totalMinutes = Math.round(v * 24 * 60);
+    const hh = Math.floor(totalMinutes / 60) % 24;
+    const mm = totalMinutes % 60;
+    return `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
+  }
+  const s = String(v).trim();
+  if(!s || s === '--') return '';
+  const m = s.match(/(\d{1,2})[:：](\d{1,2})/);
+  if(!m) return '';
+  return `${String(m[1]).padStart(2,'0')}:${String(m[2]).padStart(2,'0')}`;
+}
+function attendanceImportTimestamp(date, time){
+  if(!date || !time) return null;
+  return `${date}T${time}:00`;
+}
+function attendanceDateKeyFromTimestamp(v){
+  return v ? String(v).slice(0,10) : '';
+}
+function attendanceAddDays(dateStr, days){
+  const [y,m,d] = String(dateStr).split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m-1, d + days));
+  return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth()+1).padStart(2,'0')}-${String(dt.getUTCDate()).padStart(2,'0')}`;
+}
+function findImportColumn(headers, names){
+  return headers.findIndex(h => names.some(n => String(h||'').replace(/\s/g,'').includes(n)));
+}
+async function readAttendanceExcelFile(){
+  const file = $('attendanceExcelInput')?.files?.[0];
+  if(!file) throw new Error('請先選擇Excel檔案');
+  if(!window.XLSX) throw new Error('Excel套件尚未載入，請重新整理後再試');
+  const buf = await file.arrayBuffer();
+  const wb = XLSX.read(buf, {type:'array', cellDates:true});
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:''});
+  if(!rows.length) throw new Error('Excel沒有資料');
+  const headers = rows[0].map(excelCellText);
+  const idxNo = findImportColumn(headers, ['員工編號','工號','編號']);
+  const idxName = findImportColumn(headers, ['姓名','員工姓名']);
+  const idxDept = findImportColumn(headers, ['部門']);
+  const idxDate = findImportColumn(headers, ['打卡日期','日期']);
+  const idxIn = findImportColumn(headers, ['上班打卡時間','上班時間','上班']);
+  const idxOut = findImportColumn(headers, ['下班打卡時間','下班時間','下班']);
+  if(idxNo < 0 || idxDate < 0 || idxIn < 0 || idxOut < 0) throw new Error('Excel欄位不完整，至少需要：員工編號、打卡日期、上班打卡時間、下班打卡時間');
+  const grouped = new Map();
+  const errors = [];
+  for(let i=1;i<rows.length;i++){
+    const row = rows[i] || [];
+    const employeeNo = excelCellText(row[idxNo]).replace(/^'/,'');
+    const employeeName = idxName >= 0 ? excelCellText(row[idxName]) : '';
+    const department = idxDept >= 0 ? excelCellText(row[idxDept]) : '';
+    const date = normalizeExcelDate(row[idxDate]);
+    const checkIn = normalizeExcelTime(row[idxIn]);
+    const checkOut = normalizeExcelTime(row[idxOut]);
+    if(!employeeNo && !date && !checkIn && !checkOut) continue;
+    if(!employeeNo || !date){ errors.push(`第${i+1}列缺員工編號或日期`); continue; }
+    const key = `${employeeNo}__${date}`;
+    if(!grouped.has(key)) grouped.set(key, {employeeNo, employeeName, department, date, checkIn:'', checkOut:'', rowNos:[]});
+    const item = grouped.get(key);
+    item.rowNos.push(i+1);
+    if(checkIn && (!item.checkIn || checkIn < item.checkIn)) item.checkIn = checkIn;
+    if(checkOut && (!item.checkOut || checkOut > item.checkOut)) item.checkOut = checkOut;
+  }
+  const parsed = [...grouped.values()].sort((a,b)=> a.date.localeCompare(b.date) || a.employeeNo.localeCompare(b.employeeNo));
+  return {parsed, errors, fileName:file.name};
+}
+async function buildAttendanceImportPreview(){
+  if(!employees.length) await loadEmployees();
+  const {parsed, errors, fileName} = await readAttendanceExcelFile();
+  const empByNo = new Map(employees.map(e => [String(e.employee_no||'').trim(), e]));
+  const dates = parsed.map(x=>x.date).filter(Boolean).sort();
+  let existing = [];
+  if(dates.length){
+    const start = dates[0] + 'T00:00:00';
+    const end = attendanceAddDays(dates[dates.length-1], 1) + 'T00:00:00';
+    const r = await supabase.from('attendance').select('id, employee_id, check_in, check_out').gte('check_in', start).lt('check_in', end).limit(5000);
+    if(r.error) throw new Error('讀取既有出勤失敗：' + r.error.message);
+    existing = r.data || [];
+  }
+  const existingKey = new Map(existing.map(x => [`${x.employee_id}__${attendanceDateKeyFromTimestamp(x.check_in || x.check_out)}`, x]));
+  pendingAttendanceImportRows = parsed.map(x => {
+    const emp = empByNo.get(String(x.employeeNo||'').trim());
+    const key = emp ? `${emp.id}__${x.date}` : '';
+    return {
+      ...x,
+      employeeId: emp?.id || '',
+      matchedName: emp?.name || '',
+      existsId: key ? (existingKey.get(key)?.id || '') : '',
+      status: !emp ? '找不到員工' : (!x.checkIn && !x.checkOut ? '缺上下班' : (existingKey.has(key) ? '已有資料，會更新' : '可匯入'))
+    };
+  });
+  return {fileName, errors, rows: pendingAttendanceImportRows};
+}
+window.previewAttendanceExcelImport = async function(){
+  if(!hrLoginPrompt()) return;
+  try{
+    const res = await buildAttendanceImportPreview();
+    const okCount = res.rows.filter(r=>r.employeeId && (r.checkIn || r.checkOut)).length;
+    const updateCount = res.rows.filter(r=>r.existsId).length;
+    const missingCount = res.rows.filter(r=>!r.employeeId).length;
+    $('attendanceImportSummary').innerHTML = `檔案：${res.fileName}｜合併後 ${res.rows.length} 筆｜可寫入 ${okCount} 筆｜既有更新 ${updateCount} 筆｜找不到員工 ${missingCount} 筆${res.errors.length ? '<br>注意：'+res.errors.join('；') : ''}`;
+    $('attendanceImportPreview').innerHTML = table(['狀態','員工編號','Excel姓名','系統姓名','日期','上班','下班','原始列'], res.rows.slice(0,300).map(r=>[r.status,r.employeeNo,r.employeeName||'-',r.matchedName||'-',r.date,r.checkIn||'-',r.checkOut||'-',r.rowNos.join(',')]));
+    msg('Excel預覽完成');
+  }catch(err){
+    $('attendanceImportPreview').innerHTML = `<div class="bad">${err.message || String(err)}</div>`;
+    msg(err.message || String(err),'bad');
+  }
+}
+window.confirmAttendanceExcelImport = async function(){
+  if(!hrLoginPrompt()) return;
+  try{
+    if(!pendingAttendanceImportRows.length) await buildAttendanceImportPreview();
+    const valid = pendingAttendanceImportRows.filter(r => r.employeeId && (r.checkIn || r.checkOut));
+    if(!valid.length) return msg('沒有可寫入的出勤資料','bad');
+    let inserted = 0, updated = 0, failed = 0;
+    for(const r of valid){
+      const payload = {
+        employee_id: r.employeeId,
+        check_in: attendanceImportTimestamp(r.date, r.checkIn),
+        check_out: attendanceImportTimestamp(r.date, r.checkOut),
+        work_location: r.department || 'Excel匯入',
+        gps_lat: null,
+        gps_lng: null,
+        photo_url: null,
+        status: 'excel_import'
+      };
+      let q;
+      if(r.existsId){
+        q = await supabase.from('attendance').update(payload).eq('id', r.existsId);
+        if(q.error) failed++; else updated++;
+      }else{
+        q = await supabase.from('attendance').insert(payload);
+        if(q.error) failed++; else inserted++;
+      }
+      if(q?.error) console.warn('Excel出勤匯入失敗', r, q.error);
+    }
+    msg(`Excel匯入完成：新增 ${inserted} 筆、更新 ${updated} 筆、失敗 ${failed} 筆`, failed ? 'warn' : 'ok');
+    $('attendanceImportSummary').innerHTML = `匯入完成：新增 ${inserted} 筆、更新 ${updated} 筆、失敗 ${failed} 筆`;
+    await loadAttendanceTable();
+    if(typeof loadPayrollTable === 'function') await loadPayrollTable();
+  }catch(err){
+    msg(err.message || String(err),'bad');
+  }
 }
 
 async function loadAttendanceTable(){let r=await supabase.from('attendance').select('*, employees(employee_no,name)').order('created_at',{ascending:false}).limit(100);if(r.error)return;$('attendanceTable').innerHTML=table(['員工','上班','下班','地點','GPS','照片','操作'],(r.data||[]).map(x=>[(x.employees?.employee_no||'')+' '+(x.employees?.name||''),x.check_in?fmtTW(x.check_in):'-',x.check_out?fmtTW(x.check_out):'-',x.work_location||'-',(x.gps_lat&&x.gps_lng)?Number(x.gps_lat).toFixed(5)+', '+Number(x.gps_lng).toFixed(5):'-',x.photo_url?`<img class="photo" src="${x.photo_url}">`:'-',`<button class="btnRed" onclick="deleteAttendance('${x.id}')">刪除</button>`]))}
