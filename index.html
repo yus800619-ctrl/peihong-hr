@@ -16,7 +16,7 @@ label{font-size:14px;font-weight:800;color:#334155}table{width:100%;border-colla
 @media(max-width:700px){.nav{align-items:flex-start}h1{font-size:26px}.wrap{padding:10px}.card{padding:16px;border-radius:20px}}
 </style><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script></head><body>
 <div id="versionTopBanner" class="hide" style="background:#16a34a;color:white;font-weight:900;text-align:center;padding:14px;font-size:20px;">
-  沛鴻 HR Web V38.6｜半小時門檻回溯加班正式版
+  沛鴻 HR Web V38.7｜加班單模式回復版
 </div>
 
 
@@ -97,7 +97,7 @@ label{font-size:14px;font-weight:800;color:#334155}table{width:100%;border-colla
   <div id="editEmpInsurancePreview" class="ok">可手動輸入勞健保投保金額；留空或0則依本薪自動試算。津貼只影響加班時薪。</div>
   <button onclick="saveEmployeeEdit()">儲存員工資料</button>
   <button class="btn2" onclick="cancelEmployeeEdit()">取消</button>
-</div><div class="card"><h2>出勤紀錄</h2><div id="attendanceTable" class="scroll"></div></div><div class="card"><h2>Excel打卡匯入</h2><div class="ok">V37.5：支援「沛鴻聚合工程有限公司_打卡紀錄」格式；同員工同日期會自動合併上下班，並可由薪資頁依下班打卡自動判斷加班費。</div><label>選擇打卡Excel（.xlsx）</label><input id="attendanceExcelInput" type="file" accept=".xlsx,.xls" /><div class="grid grid2"><button class="btn2" onclick="previewAttendanceExcelImport()">預覽匯入</button><button class="btnGreen" onclick="confirmAttendanceExcelImport()">確認寫入出勤</button></div><div class="warn">匯入只新增/更新出勤資料，不修改登入、打卡、請假、報表、勞健保。薪資頁會依半小時門檻回溯規則自動補算未填單加班：17:30(含)以前不算，超過17:30從17:00回溯，每滿15分鐘0.25小時。若同員工同日期已有資料，會先在預覽標示。</div><div id="attendanceImportSummary" class="muted"></div><div id="attendanceImportPreview" class="scroll"></div></div><div class="card"><h2>請假審核</h2><div id="leaveTable" class="scroll"></div></div><div class="card"><h2>加班審核</h2><div id="overtimeTable" class="scroll"></div></div>
+</div><div class="card"><h2>出勤紀錄</h2><div id="attendanceTable" class="scroll"></div></div><div class="card"><h2>Excel打卡匯入</h2><div class="ok">V38.7：支援「沛鴻聚合工程有限公司_打卡紀錄」格式；同員工同日期會自動合併上下班。Excel 匯入只做出勤，不自動產生加班。</div><label>選擇打卡Excel（.xlsx）</label><input id="attendanceExcelInput" type="file" accept=".xlsx,.xls" /><div class="grid grid2"><button class="btn2" onclick="previewAttendanceExcelImport()">預覽匯入</button><button class="btnGreen" onclick="confirmAttendanceExcelImport()">確認寫入出勤</button></div><div class="warn">匯入只新增/更新出勤資料，不修改登入、打卡、請假、報表、勞健保。V38.7 起 Excel 打卡不自動計算加班；加班只依核准加班單計算。若同員工同日期已有資料，會先在預覽標示。</div><div id="attendanceImportSummary" class="muted"></div><div id="attendanceImportPreview" class="scroll"></div></div><div class="card"><h2>請假審核</h2><div id="leaveTable" class="scroll"></div></div><div class="card"><h2>加班審核</h2><div id="overtimeTable" class="scroll"></div></div>
 <div class="card" id="hrReportCenterCard">
   <h2>📊 報表中心</h2>
   <div class="ok">安全匯出：只讀取資料，不修改薪資、加班、請假、投保或員工資料。</div>
@@ -131,14 +131,14 @@ label{font-size:14px;font-weight:800;color:#334155}table{width:100%;border-colla
       <button class="btnGreen" onclick="exportAttendanceStatsCenter()">匯出出缺勤統計</button>
     </div>
   </div>
-  <p class="muted">匯出為單一 Excel 檔，內含：儀表總覽、員工資料、薪資總表、打卡明細、請假明細、加班明細、特休明細。V38.6出缺勤統計：遲到、早退、打卡加班總時數、請休假彙總；打卡加班採半小時門檻回溯：17:30(含)以前不算，超過17:30則從17:00回溯，每滿15分鐘計0.25小時，並排除Excel延後下班原因標記「非加班/私事」的日期。</p>
+  <p class="muted">匯出為單一 Excel 檔，內含：儀表總覽、員工資料、薪資總表、打卡明細、請假明細、加班明細、特休明細。V38.7出缺勤統計：遲到、早退、核准加班單時數、請休假彙總；Excel打卡只做出勤，加班只依核准加班單計算。</p>
   <div id="hrReportPreview" class="scroll"></div>
 </div>
 <div class="card"><h2>產生薪資</h2>
-<div class="ok">V38.6 薪資規則：優先帶入核准加班單；若員工未填加班單，薪資頁會依下班打卡自動補算加班。打卡加班採半小時門檻回溯：17:30(含)以前不算，超過17:30則從17:00回溯，每滿15分鐘計0.25小時，不足15分鐘不計；非加班/私事不計。已填核准加班單的日期不重複用打卡補算。HR 可於加班審核表調整當日類型為平日、休息日、國定假日、例假日。</div><div class="ok">勞保、健保投保金額可自動試算，也可由 HR 手動輸入投保金額；手動輸入後系統依手動投保金額計算扣款。</div><div class="warn">如果員工下拉空白，請按「重新整理後台資料」或「補齊員工帳密」。</div><div class="grid grid3"><div><label>員工</label><select id="payEmpSelect" onchange="updatePayrollInputsAuto()"></select></div><div><label>月份</label><input id="payMonth" type="month" onchange="updatePayrollInputsAuto()" /></div><div><label>加班費</label><input id="payOvertime" type="number" value="0" readonly /><div class="muted" id="payOvertimeAutoTip">依核准加班單 + 下班打卡自動補算</div></div><div><label>加班時薪</label><input id="payHourlyRate" type="number" value="0" step="0.01" readonly /><div class="muted">依選取員工工資基礎自動換算</div></div><div><label>加班倍率</label><input id="payOtMultiplier" type="number" value="1.34" step="0.01" /></div><div><label>雜費補助/津貼</label><input id="payAllowance" type="number" value="0" /></div><div><label>年中獎金</label><input id="payMidBonus" type="number" value="0" /></div><div><label>年終獎金</label><input id="payYearBonus" type="number" value="0" /></div><div><label>三節獎金</label><input id="payFestivalBonus" type="number" value="0" /></div><div><label>浮動獎金</label><input id="payVariableBonus" type="number" value="0" /></div><div><label>其他不列入工資</label><input id="payOtherNonWage" type="number" value="0" /></div><div><label>其他扣款</label><input id="payDeductions" type="number" value="0" /></div>
+<div class="ok">V38.7 薪資規則：加班費只帶入核准加班單；Excel打卡與下班時間不自動計算加班。加班單統一從17:00起算，每滿15分鐘計0.25小時，不足15分鐘不計。HR 可於加班審核表調整當日類型為平日、休息日、國定假日、例假日。</div><div class="ok">勞保、健保投保金額可自動試算，也可由 HR 手動輸入投保金額；手動輸入後系統依手動投保金額計算扣款。</div><div class="warn">如果員工下拉空白，請按「重新整理後台資料」或「補齊員工帳密」。</div><div class="grid grid3"><div><label>員工</label><select id="payEmpSelect" onchange="updatePayrollInputsAuto()"></select></div><div><label>月份</label><input id="payMonth" type="month" onchange="updatePayrollInputsAuto()" /></div><div><label>加班費</label><input id="payOvertime" type="number" value="0" readonly /><div class="muted" id="payOvertimeAutoTip">只依核准加班單計算</div></div><div><label>加班時薪</label><input id="payHourlyRate" type="number" value="0" step="0.01" readonly /><div class="muted">依選取員工工資基礎自動換算</div></div><div><label>加班倍率</label><input id="payOtMultiplier" type="number" value="1.34" step="0.01" /></div><div><label>雜費補助/津貼</label><input id="payAllowance" type="number" value="0" /></div><div><label>年中獎金</label><input id="payMidBonus" type="number" value="0" /></div><div><label>年終獎金</label><input id="payYearBonus" type="number" value="0" /></div><div><label>三節獎金</label><input id="payFestivalBonus" type="number" value="0" /></div><div><label>浮動獎金</label><input id="payVariableBonus" type="number" value="0" /></div><div><label>其他不列入工資</label><input id="payOtherNonWage" type="number" value="0" /></div><div><label>其他扣款</label><input id="payDeductions" type="number" value="0" /></div>
 <div><label>事假扣薪比例</label><input id="payPersonalRate" type="number" value="1" step="0.01" /></div>
 <div><label>病假扣薪比例</label><input id="paySickRate" type="number" value="0.5" step="0.01" /></div></div><button class="btnGreen" onclick="autoCalculatePayroll()">自動計算薪資</button><div id="payrollCalcDetail" class="scroll"></div><button class="btn2" onclick="fillApprovedOvertimePay()">帶入核准加班費</button><button onclick="createPayroll()">手動產生薪資</button><button class="btn2" onclick="loadInsuranceTotals()">勞健保總額統計</button><div id="insuranceTotals" class="scroll"></div></div><div class="card"><h2>薪資紀錄</h2><div id="payrollTable" class="scroll"></div></div></section>
-<section id="page-install" class="page hide"><div class="card"><h1>手機安裝方式</h1><div class="grid grid2"><div><h2>Android</h2><ol class="muted"><li>用 Chrome 開啟本網址</li><li>點右上角選單</li><li>選「安裝應用程式」或「加入主畫面」</li></ol></div><div><h2>iPhone</h2><ol class="muted"><li>用 Safari 開啟本網址</li><li>點分享按鈕</li><li>選「加入主畫面」</li></ol></div></div><div class="warn">請不要用 LINE 內建瀏覽器安裝；打卡需要允許 GPS 與相機權限。</div></div></section><div id="versionInfoCard" class="wrap hide"><div class="card"><b>版本：</b>沛鴻 HR Web V38.6｜半小時門檻回溯加班正式版：出缺勤統計與薪資自動加班會先依員工+日期合併去重，避免重複匯入造成加班倍增；Excel延後下班原因標記「非加班/私事」的日期自動不計加班。</div></div></main>
+<section id="page-install" class="page hide"><div class="card"><h1>手機安裝方式</h1><div class="grid grid2"><div><h2>Android</h2><ol class="muted"><li>用 Chrome 開啟本網址</li><li>點右上角選單</li><li>選「安裝應用程式」或「加入主畫面」</li></ol></div><div><h2>iPhone</h2><ol class="muted"><li>用 Safari 開啟本網址</li><li>點分享按鈕</li><li>選「加入主畫面」</li></ol></div></div><div class="warn">請不要用 LINE 內建瀏覽器安裝；打卡需要允許 GPS 與相機權限。</div></div></section><div id="versionInfoCard" class="wrap hide"><div class="card"><b>版本：</b>沛鴻 HR Web V38.7｜加班單模式回復版：Excel打卡只做出勤；薪資與出缺勤統計的加班只依核准加班單計算。加班單從17:00起算，每滿15分鐘0.25小時，不足15分鐘不計。</div></div></main>
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const supabase = createClient('https://mhsasrjpuottlmhsutnb.supabase.co', 'sb_publishable_2lGa4xcG6gxuFTYas0A0Bw_1I56RG5I');
@@ -833,7 +833,7 @@ window.previewAttendanceExcelImport = async function(){
     const updateCount = res.rows.filter(r=>r.existsId).length;
     const missingCount = res.rows.filter(r=>!r.employeeId).length;
     $('attendanceImportSummary').innerHTML = `檔案：${res.fileName}｜合併後 ${res.rows.length} 筆｜可寫入 ${okCount} 筆｜既有更新 ${updateCount} 筆｜找不到員工 ${missingCount} 筆${res.errors.length ? '<br>注意：'+res.errors.join('；') : ''}`;
-    $('attendanceImportPreview').innerHTML = table(['狀態','員工編號','Excel姓名','系統姓名','日期','上班','下班','加班判斷','原始列'], res.rows.slice(0,300).map(r=>[r.status,r.employeeNo,r.employeeName||'-',r.matchedName||'-',r.date,r.checkIn||'-',r.checkOut||'-',r.noOvertime?'非加班不計':'可自動判斷',r.rowNos.join(',')]));
+    $('attendanceImportPreview').innerHTML = table(['狀態','員工編號','Excel姓名','系統姓名','日期','上班','下班','加班判斷','原始列'], res.rows.slice(0,300).map(r=>[r.status,r.employeeNo,r.employeeName||'-',r.matchedName||'-',r.date,r.checkIn||'-',r.checkOut||'-',r.noOvertime?'不自動算加班':'只做出勤',r.rowNos.join(',')]));
     msg('Excel預覽完成');
   }catch(err){
     $('attendanceImportPreview').innerHTML = `<div class="bad">${err.message || String(err)}</div>`;
@@ -1095,7 +1095,7 @@ function overtimeRoundByQuarterHour(hours){
 }
 function overtimeRoundByHalfHourThreshold(hours){ return overtimeRoundByQuarterHour(hours); }
 function halfHourFloor(hours){ return overtimeRoundByQuarterHour(hours); }
-function halfHourRuleText(){ return '打卡加班採半小時門檻回溯：17:30(含)以前不算；超過17:30則從17:00回溯，每滿15分鐘計0.25小時，不足15分鐘不計。'; }
+function halfHourRuleText(){ return 'V38.7：打卡不自動計加班；加班只依核准加班單，從17:00起算，每滿15分鐘計0.25小時，不足15分鐘不計。'; }
 function leaveHours(start, end){
   if(!start || !end) return 0;
   let s = new Date(String(start).replace(' ', 'T'));
@@ -1183,9 +1183,7 @@ function calcAutoOvertimeHoursFromCheckout(date, checkOut, row){
   if(attendanceMarkedNoOvertime(row)) return 0;
   const outTime = timeOnlyFromTs(checkOut) || normalizeExcelTime(checkOut);
   if(!date || !outTime) return 0;
-  // V38.6：半小時門檻回溯。
-  // 17:30(含)以前不算加班；只要超過17:30，就從17:00回溯計算，每滿15分鐘=0.25小時，不足15分鐘不計。
-  // 例：17:28=0、17:30=0、17:31=0.5、17:46=0.75。
+  // V38.7：此函式已不作為薪資/統計依據，系統加班只看核准加班單。
   const m = String(outTime).match(/^(\d{1,2}):(\d{2})$/);
   if(!m) return 0;
   const outMinutes = Number(m[1]) * 60 + Number(m[2]);
@@ -1218,43 +1216,16 @@ function attendanceDailyUniqueRows(rows){
   return Array.from(map.values());
 }
 async function getAutoAttendanceOvertimeBreakdown(empId, month, hourlyRate, skipDates){
-  const start = month + '-01T00:00:00';
-  const endDate = new Date(month + '-01');
-  endDate.setMonth(endDate.getMonth()+1);
-  const end = endDate.toISOString().slice(0,10) + 'T00:00:00';
-  const r = await supabase.from('attendance')
-    .select('*')
-    .eq('employee_id', empId)
-    .gte('check_out', start)
-    .lt('check_out', end)
-    .limit(5000);
-  if(r.error) throw new Error('打卡自動加班讀取失敗：' + r.error.message);
-  const hours = {
-    weekday_first2:0, weekday_after2:0, rest_first2:0, rest_3to8:0, rest_9to12:0,
-    holiday_within8:0, holiday_after8_first2:0, holiday_after8_after2:0,
-    regular_emergency:0, regular_after8_first2:0, regular_after8_after2:0
+  // V38.7：打卡 / Excel 匯入不再自動計算加班。保留函式名稱避免舊流程呼叫錯誤，但固定回傳 0。
+  return {
+    hours:{weekday_first2:0, weekday_after2:0, rest_first2:0, rest_3to8:0, rest_9to12:0, holiday_within8:0, holiday_after8_first2:0, holiday_after8_after2:0, regular_emergency:0, regular_after8_first2:0, regular_after8_after2:0},
+    totalHours:0,
+    pay:{weekday:0, rest:0, holiday:0, regular:0},
+    total:0,
+    rows:[]
   };
-  const rows = [];
-  for(const row of attendanceDailyUniqueRows(r.data || [])){
-    const date = dateOnlyFromTs(row.check_out || row.check_in);
-    if(!date || (skipDates && skipDates.has(date))) continue;
-    const h = calcAutoOvertimeHoursFromCheckout(date, row.check_out, row);
-    if(h <= 0) continue;
-    const dayType = inferOvertimeDayType(date);
-    const parts = splitOvertimeByLaw(dayType, h);
-    mergeOvertimeHours(hours, parts);
-    rows.push({...row, auto_overtime_date: date, auto_overtime_hours: h, auto_overtime_day_type: dayType, auto_overtime_breakdown: parts});
-  }
-  const pay = {
-    weekday: round2(hourlyRate * (hours.weekday_first2*1.34 + hours.weekday_after2*1.67)),
-    rest: round2(hourlyRate * (hours.rest_first2*1.34 + hours.rest_3to8*1.67 + hours.rest_9to12*2.67)),
-    holiday: round2((hours.holiday_within8 > 0 ? hourlyRate * 8 : 0) + hourlyRate * (hours.holiday_after8_first2*1.34 + hours.holiday_after8_after2*1.67)),
-    regular: round2(hourlyRate * (hours.regular_emergency*2 + hours.regular_after8_first2*1.34 + hours.regular_after8_after2*1.67))
-  };
-  const totalHours = Object.values(hours).reduce((a,b)=>a+num(b),0);
-  const total = round2(pay.weekday + pay.rest + pay.holiday + pay.regular);
-  return {hours, totalHours:round2(totalHours), pay, total, rows};
 }
+
 window.submitOvertime = async function(){
   if(!selectedEmployee) return msg('請先登入員工','bad');
   const date = $('otDate')?.value;
@@ -1392,10 +1363,7 @@ async function getApprovedOvertimeBreakdown(empId, month, hourlyRate){
     }
   }
 
-  const manualDates = new Set(approvedRows.map(row => String(row.overtime_date || row.date || '').slice(0,10)).filter(Boolean));
-  const autoOt = await getAutoAttendanceOvertimeBreakdown(empId, month, hourlyRate, manualDates);
-  mergeOvertimeHours(hours, autoOt.hours);
-
+  // V38.7：回復加班單模式。加班費只依核准加班單計算，不再用下班打卡或 Excel 匯入資料自動補算加班。
   const pay = {
     weekday: round2(hourlyRate * (hours.weekday_first2*1.34 + hours.weekday_after2*1.67)),
     rest: round2(hourlyRate * (hours.rest_first2*1.34 + hours.rest_3to8*1.67 + hours.rest_9to12*2.67)),
@@ -1405,9 +1373,8 @@ async function getApprovedOvertimeBreakdown(empId, month, hourlyRate){
   const totalHours = Object.values(hours).reduce((a,b)=>a+num(b),0);
   const storedTotal = round2(approvedRows.reduce((sum,row)=>sum+getOvertimePayValue(row),0));
   const calculatedTotal = round2(pay.weekday + pay.rest + pay.holiday + pay.regular);
-  const manualCalculatedTotal = round2(calculatedTotal - autoOt.total);
-  const total = round2((storedTotal > 0 ? storedTotal : manualCalculatedTotal) + autoOt.total);
-  return {hours, totalHours:round2(totalHours), pay, total, rows:approvedRows, storedTotal, calculatedTotal, autoAttendance:autoOt, rawRows:r.data||[]};
+  const total = round2(storedTotal > 0 ? storedTotal : calculatedTotal);
+  return {hours, totalHours:round2(totalHours), pay, total, rows:approvedRows, storedTotal, calculatedTotal, autoAttendance:{hours:{}, totalHours:0, pay:{weekday:0,rest:0,holiday:0,regular:0}, total:0, rows:[]}, rawRows:r.data||[]};
 }
 window.fillApprovedOvertimePay = async function(){
   if(!hrLoginPrompt()) return;
@@ -1420,7 +1387,7 @@ window.fillApprovedOvertimePay = async function(){
     if($('payHourlyRate')) $('payHourlyRate').value = hourlyRate;
     const ot = await getApprovedOvertimeBreakdown(emp.id, month, hourlyRate);
     $('payOvertime').value = ot.total;
-    msg(`已依系統自動拆分加班時段帶入：${ot.totalHours} 小時，加班費 $${money(ot.total)}`);
+    msg(`已依核准加班單帶入：${ot.totalHours} 小時，加班費 $${money(ot.total)}`);
   }catch(err){
     msg(err.message || String(err),'bad');
   }
@@ -1438,7 +1405,7 @@ window.updatePayrollInputsAuto = async function(){
     const ot = await getApprovedOvertimeBreakdown(emp.id, month, hourlyRate);
     $('payOvertime').value = ot.total || 0;
     const tip = document.getElementById('payOvertimeAutoTip');
-    if(tip) tip.textContent = `已自動帶入加班：核准單 ${(ot.totalHours - (ot.autoAttendance?.totalHours || 0)).toFixed(2)} 小時 + 打卡自動 ${(ot.autoAttendance?.totalHours || 0).toFixed(2)} 小時 / $${money(ot.total)}`;
+    if(tip) tip.textContent = `已帶入核准加班單：${ot.totalHours.toFixed(2)} 小時 / $${money(ot.total)}`;
   }catch(err){
     console.warn('自動帶入加班費失敗', err);
     if($('payOvertime')) $('payOvertime').value = $('payOvertime').value || 0;
@@ -1527,7 +1494,7 @@ window.autoCalculatePayroll = async function(){
           <tr><td>休息日加班費</td><td>$${money(overtime.pay.rest)}</td></tr>
           <tr><td>國定假日加班費</td><td>$${money(overtime.pay.holiday)}</td></tr>
           <tr><td>例假日加班費</td><td>$${money(overtime.pay.regular)}</td></tr>
-          <tr><td>打卡自動加班</td><td>${overtime.autoAttendance?.totalHours || 0} 小時｜$${money(overtime.autoAttendance?.total || 0)}</td></tr>
+          <tr><td>加班來源</td><td>核准加班單 ${overtime.totalHours || 0} 小時｜$${money(overtime.total || 0)}</td></tr>
           <tr><td>加班費合計</td><td>$${money(overtime.total)}</td></tr>
           <tr><td>不列入工資項目</td><td>$${money(result.nonWage)}</td></tr>
           <tr><td>應發合計</td><td>$${money(result.gross)}</td></tr>
@@ -1781,10 +1748,8 @@ function statsAttendanceEarlyMinutes(a){
   return Math.max(0, 17*60 - min);
 }
 function statsAutoOvertimeHoursFromAttendance(a){
-  const d = statsDateFromAttendance(a);
-  if(!d || !a || !a.check_out) return 0;
-  // V38.6：報表中心總加班唯一公式。先去重再套用半小時門檻回溯；非加班/私事由 calcAutoOvertimeHoursFromCheckout 排除。
-  return calcAutoOvertimeHoursFromCheckout(d, a.check_out, a);
+  // V38.7：報表中心不再從打卡自動計加班。
+  return 0;
 }
 function statsLeaveTypeKey(t){
   const s = String(t||'其他').trim();
@@ -1814,17 +1779,12 @@ function buildAttendanceStatsRows(data){
     const late = statsAttendanceLateMinutes(a); if(late>0){ row.lateCount += 1; row.lateMinutes += late; }
     const early = statsAttendanceEarlyMinutes(a); if(early>0){ row.earlyCount += 1; row.earlyMinutes += early; }
   }
-  // V38.4：出缺勤統計的「打卡加班總時數」已直接改這裡，總加班只用原始下班打卡重新計算。
-  // 核准加班單只做獨立欄位參考，不併入總加班，避免統計中心與人工核對時重複或混算。
+  // V38.7：出缺勤統計回復加班單模式。打卡與 Excel 匯入只做出勤，不自動計入加班。
+  // 總加班時數只取核准加班單。
   for(const o of otInRange){
     const id = String(o.employee_id||''); if(!byEmp.has(id)) continue;
     const hrs = hrReportN(o.overtime_hours||o.total_hours||o.calculated_hours);
     byEmp.get(id).approvedOtHours += hrs;
-  }
-  for(const a of attInRange){
-    const id = String(a.employee_id||''); if(!byEmp.has(id)) continue;
-    const d = statsDateFromAttendance(a); if(!d || !a.check_out) continue;
-    byEmp.get(id).autoOtHours += statsAutoOvertimeHoursFromAttendance(a);
   }
   for(const l of leaveInRange){
     const id = String(l.employee_id||''); if(!byEmp.has(id)) continue;
@@ -1836,7 +1796,7 @@ function buildAttendanceStatsRows(data){
   const rows = Array.from(byEmp.values()).map(r=>{
     r.attendanceDayCount = r.attendanceDays.size;
     r.autoOtHours = round2(r.autoOtHours); r.approvedOtHours = round2(r.approvedOtHours);
-    r.totalOtHours = round2(r.autoOtHours);
+    r.totalOtHours = round2(r.approvedOtHours);
     r.leaveTotalHours = round2(r.leaveTotalHours); r.absentHours = round2(r.absentHours);
     return r;
   });
@@ -1844,17 +1804,16 @@ function buildAttendanceStatsRows(data){
 }
 function attendanceStatsSheetRows(rows){
   const leaveTypes = Array.from(new Set(rows.flatMap(r=>Object.keys(r.leaveHours||{}))));
-  const header = ['員工編號','姓名','部門','出勤天數','遲到次數','遲到總分鐘','早退次數','早退總分鐘','缺上班卡','缺下班卡','自動加班時數','核准加班時數','打卡加班總時數','請假總小時','曠職小時',...leaveTypes.map(t=>t+'小時')];
+  const header = ['員工編號','姓名','部門','出勤天數','遲到次數','遲到總分鐘','早退次數','早退總分鐘','缺上班卡','缺下班卡','打卡自動加班(停用)','核准加班時數','加班總時數','請假總小時','曠職小時',...leaveTypes.map(t=>t+'小時')];
   return [header, ...rows.map(r=>[r.employee_no,r.name,r.department,r.attendanceDayCount,r.lateCount,r.lateMinutes,r.earlyCount,r.earlyMinutes,r.checkInMissing,r.checkOutMissing,r.autoOtHours,r.approvedOtHours,r.totalOtHours,r.leaveTotalHours,r.absentHours,...leaveTypes.map(t=>hrReportN(r.leaveHours[t]))])];
 }
 function attendanceStatsDetailRows(data){
   const rows=[['類型','日期','員工編號','姓名','說明','分鐘/小時','來源']];
   const empNo = id => hrReportEmpNo(data.empMap,id); const empName = id => hrReportEmpName(data.empMap,id);
   attendanceDailyUniqueRows((data.attendance||[]).filter(a=>hrReportInRange(statsDateFromAttendance(a)))).forEach(a=>{
-    const d = statsDateFromAttendance(a); const late=statsAttendanceLateMinutes(a); const early=statsAttendanceEarlyMinutes(a); const autoOt=statsAutoOvertimeHoursFromAttendance(a);
+    const d = statsDateFromAttendance(a); const late=statsAttendanceLateMinutes(a); const early=statsAttendanceEarlyMinutes(a);
     if(late>0) rows.push(['遲到',d,empNo(a.employee_id),empName(a.employee_id),`上班 ${hrReportPick(a,['check_in'])}`,late,'打卡']);
     if(early>0) rows.push(['早退',d,empNo(a.employee_id),empName(a.employee_id),`下班 ${hrReportPick(a,['check_out'])}`,early,'打卡']);
-    if(autoOt>0) rows.push(['自動加班',d,empNo(a.employee_id),empName(a.employee_id),`下班 ${hrReportPick(a,['check_out'])}`,autoOt,'下班打卡']);
     if(!a.check_in) rows.push(['缺上班卡',d,empNo(a.employee_id),empName(a.employee_id),'缺上班打卡','', '打卡']);
     if(!a.check_out) rows.push(['缺下班卡',d,empNo(a.employee_id),empName(a.employee_id),'缺下班打卡','', '打卡']);
   });
@@ -1874,7 +1833,7 @@ window.generateAttendanceStatsCenter = async function(){
     const rows = buildAttendanceStatsRows(data);
     lastAttendanceStatsRows = {rows, data};
     const display = rows.map(r=>[r.employee_no,r.name,r.department||'-',r.attendanceDayCount,r.lateCount,r.lateMinutes,r.earlyCount,r.earlyMinutes,r.totalOtHours,r.leaveTotalHours,r.checkInMissing,r.checkOutMissing]);
-    $('hrReportPreview').innerHTML = '<h3>V38.6 出缺勤統計總覽｜'+hrReportPeriodLabel()+'</h3><div class="ok">V38.6：打卡加班總時數 = 先依「員工+日期」去重合併，再套用半小時門檻回溯：17:30(含)以前不算，超過17:30從17:00回溯，每滿15分鐘0.25小時計算；Excel延後下班原因標記「非加班/私事」不計；核准加班單不併入此欄。</div>' + table(['員編','姓名','部門','出勤天數','遲到次數','遲到分鐘','早退次數','早退分鐘','打卡加班總時數','請假小時','缺上班卡','缺下班卡'], display);
+    $('hrReportPreview').innerHTML = '<h3>V38.7 出缺勤統計總覽｜'+hrReportPeriodLabel()+'</h3><div class="ok">V38.7：加班總時數只依核准加班單計算；打卡與 Excel 匯入只統計出勤、遲到、早退，不自動計加班。</div>' + table(['員編','姓名','部門','出勤天數','遲到次數','遲到分鐘','早退次數','早退分鐘','核准加班總時數','請假小時','缺上班卡','缺下班卡'], display);
     msg('出缺勤統計已產生，可直接匯出Excel。');
   }catch(e){ console.error(e); msg('出缺勤統計失敗：'+(e.message||e),'bad'); }
 };
