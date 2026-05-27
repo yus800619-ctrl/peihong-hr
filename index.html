@@ -15,20 +15,21 @@ label{font-size:14px;font-weight:800;color:#334155}table{width:100%;border-colla
 .pill{display:inline-block;padding:5px 10px;border-radius:999px;background:#f1f5f9;font-size:12px;font-weight:800}.hide{display:none!important}.photo{max-width:90px;max-height:90px;border-radius:12px;border:1px solid #e2e8f0;object-fit:cover}
 @media(max-width:700px){.nav{align-items:flex-start}h1{font-size:26px}.wrap{padding:10px}.card{padding:16px;border-radius:20px}}
 
-/* V38.9 後台左側固定選單強制套用 */
+/* V39.1 出勤匯入缺上班卡判斷修正版 + V39 HR內控加班監控版 + V38.9 後台左側固定選單 */
 .admin-shell{display:grid!important;grid-template-columns:240px minmax(0,1fr);gap:16px;align-items:start}.admin-shell .card{margin-top:0}
-.admin-sidebar{position:sticky;top:92px;background:#0f172a;color:white;border-radius:24px;padding:14px;box-shadow:0 8px 24px rgba(15,23,42,.14);z-index:5}.admin-sidebar:before{content:"V38.9";display:inline-block;background:#22c55e;color:#052e16;font-weight:900;border-radius:999px;padding:4px 10px;margin:2px 8px 10px}
+.admin-sidebar{position:sticky;top:92px;background:#0f172a;color:white;border-radius:24px;padding:14px;box-shadow:0 8px 24px rgba(15,23,42,.14);z-index:5}.admin-sidebar:before{content:"V39.1";display:inline-block;background:#22c55e;color:#052e16;font-weight:900;border-radius:999px;padding:4px 10px;margin:2px 8px 10px}
 .admin-sidebar-title{font-weight:900;font-size:18px;margin:6px 8px 12px}
 .admin-menu-btn{width:100%;display:block;text-align:left;margin:6px 0;border-radius:14px;background:rgba(255,255,255,.08);color:white;border:1px solid rgba(255,255,255,.10)}
 .admin-menu-btn.active{background:white;color:#0f172a}
 .admin-content{min-width:0}
 .admin-panel-hidden{display:none!important}
 .admin-mobile-title{display:none}
+.ot-ok{background:#dcfce7;color:#166534;border-radius:999px;padding:4px 10px;font-weight:900}.ot-warn{background:#fef3c7;color:#92400e;border-radius:999px;padding:4px 10px;font-weight:900}.ot-danger{background:#fee2e2;color:#991b1b;border-radius:999px;padding:4px 10px;font-weight:900}
 @media(max-width:850px){.admin-shell{display:block}.admin-sidebar{position:static;margin:12px 0}.admin-sidebar-title{display:none}.admin-menu-btn{display:inline-block;width:auto;margin:4px}.admin-mobile-title{display:block;font-weight:900;margin:8px 0;color:#334155}}
 
 </style><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script></head><body>
 <div id="versionTopBanner" class="hide" style="background:#16a34a;color:white;font-weight:900;text-align:center;padding:14px;font-size:20px;">
-  沛鴻 HR Web V38.9｜後台左側選單強制套用版
+  沛鴻 HR Web V39.1｜出勤匯入缺上班卡判斷修正版
 </div>
 
 
@@ -110,6 +111,7 @@ label{font-size:14px;font-weight:800;color:#334155}table{width:100%;border-colla
   <button onclick="saveEmployeeEdit()">儲存員工資料</button>
   <button class="btn2" onclick="cancelEmployeeEdit()">取消</button>
 </div><div class="card"><h2>出勤紀錄</h2><div id="attendanceTable" class="scroll"></div></div><div class="card"><h2>Excel打卡匯入</h2><div class="ok">V38.7：支援「沛鴻聚合工程有限公司_打卡紀錄」格式；同員工同日期會自動合併上下班。Excel 匯入只做出勤，不自動產生加班。</div><label>選擇打卡Excel（.xlsx）</label><input id="attendanceExcelInput" type="file" accept=".xlsx,.xls" /><div class="grid grid2"><button class="btn2" onclick="previewAttendanceExcelImport()">預覽匯入</button><button class="btnGreen" onclick="confirmAttendanceExcelImport()">確認寫入出勤</button></div><div class="warn">匯入只新增/更新出勤資料，不修改登入、打卡、請假、報表、勞健保。V38.7 起 Excel 打卡不自動計算加班；加班只依核准加班單計算。若同員工同日期已有資料，會先在預覽標示。</div><div id="attendanceImportSummary" class="muted"></div><div id="attendanceImportPreview" class="scroll"></div></div><div class="card"><h2>請假審核</h2><div id="leaveTable" class="scroll"></div></div><div class="card"><h2>加班審核</h2><div id="overtimeTable" class="scroll"></div></div>
+<div class="card" id="overtimeControlCard"><h2>HR內控加班監控</h2><div class="ok">V39：此區只給 HR 後台查看，員工端不顯示、不提醒、不禁止送單。加班時數只統計「核准加班單」。</div><div class="grid grid3"><button class="btnGreen" onclick="generateOvertimeControlCenter()">產生本月加班監控</button><button class="btn2" onclick="exportOvertimeControlCenter()">匯出加班監控Excel</button><div class="muted" style="align-self:center">警示：36h 黃燈，46h 紅燈</div></div><div id="overtimeControlPreview" class="scroll"></div></div>
 <div class="card" id="hrReportCenterCard">
   <h2>📊 報表中心</h2>
   <div class="ok">安全匯出：只讀取資料，不修改薪資、加班、請假、投保或員工資料。</div>
@@ -150,7 +152,7 @@ label{font-size:14px;font-weight:800;color:#334155}table{width:100%;border-colla
 <div class="ok">V38.7 薪資規則：加班費只帶入核准加班單；Excel打卡與下班時間不自動計算加班。加班單統一從17:00起算，每滿15分鐘計0.25小時，不足15分鐘不計。HR 可於加班審核表調整當日類型為平日、休息日、國定假日、例假日。</div><div class="ok">勞保、健保投保金額可自動試算，也可由 HR 手動輸入投保金額；手動輸入後系統依手動投保金額計算扣款。</div><div class="warn">如果員工下拉空白，請按「重新整理後台資料」或「補齊員工帳密」。</div><div class="grid grid3"><div><label>員工</label><select id="payEmpSelect" onchange="updatePayrollInputsAuto()"></select></div><div><label>月份</label><input id="payMonth" type="month" onchange="updatePayrollInputsAuto()" /></div><div><label>加班費</label><input id="payOvertime" type="number" value="0" readonly /><div class="muted" id="payOvertimeAutoTip">只依核准加班單計算</div></div><div><label>加班時薪</label><input id="payHourlyRate" type="number" value="0" step="0.01" readonly /><div class="muted">依選取員工工資基礎自動換算</div></div><div><label>加班倍率</label><input id="payOtMultiplier" type="number" value="1.34" step="0.01" /></div><div><label>雜費補助/津貼</label><input id="payAllowance" type="number" value="0" /></div><div><label>年中獎金</label><input id="payMidBonus" type="number" value="0" /></div><div><label>年終獎金</label><input id="payYearBonus" type="number" value="0" /></div><div><label>三節獎金</label><input id="payFestivalBonus" type="number" value="0" /></div><div><label>浮動獎金</label><input id="payVariableBonus" type="number" value="0" /></div><div><label>其他不列入工資</label><input id="payOtherNonWage" type="number" value="0" /></div><div><label>其他扣款</label><input id="payDeductions" type="number" value="0" /></div>
 <div><label>事假扣薪比例</label><input id="payPersonalRate" type="number" value="1" step="0.01" /></div>
 <div><label>病假扣薪比例</label><input id="paySickRate" type="number" value="0.5" step="0.01" /></div></div><button class="btnGreen" onclick="autoCalculatePayroll()">自動計算薪資</button><div id="payrollCalcDetail" class="scroll"></div><button class="btn2" onclick="fillApprovedOvertimePay()">帶入核准加班費</button><button onclick="createPayroll()">手動產生薪資</button><button class="btn2" onclick="loadInsuranceTotals()">勞健保總額統計</button><div id="insuranceTotals" class="scroll"></div></div><div class="card"><h2>薪資紀錄</h2><div id="payrollTable" class="scroll"></div></div></section>
-<section id="page-install" class="page hide"><div class="card"><h1>手機安裝方式</h1><div class="grid grid2"><div><h2>Android</h2><ol class="muted"><li>用 Chrome 開啟本網址</li><li>點右上角選單</li><li>選「安裝應用程式」或「加入主畫面」</li></ol></div><div><h2>iPhone</h2><ol class="muted"><li>用 Safari 開啟本網址</li><li>點分享按鈕</li><li>選「加入主畫面」</li></ol></div></div><div class="warn">請不要用 LINE 內建瀏覽器安裝；打卡需要允許 GPS 與相機權限。</div></div></section><div id="versionInfoCard" class="wrap hide"><div class="card"><b>版本：</b>沛鴻 HR Web V38.9｜後台左側選單強制套用版：後台改為左側固定選單＋右側內容切換，減少上下滑動；加班維持加班單模式，打卡/Excel匯入只做出勤。</div></div></main>
+<section id="page-install" class="page hide"><div class="card"><h1>手機安裝方式</h1><div class="grid grid2"><div><h2>Android</h2><ol class="muted"><li>用 Chrome 開啟本網址</li><li>點右上角選單</li><li>選「安裝應用程式」或「加入主畫面」</li></ol></div><div><h2>iPhone</h2><ol class="muted"><li>用 Safari 開啟本網址</li><li>點分享按鈕</li><li>選「加入主畫面」</li></ol></div></div><div class="warn">請不要用 LINE 內建瀏覽器安裝；打卡需要允許 GPS 與相機權限。</div></div></section><div id="versionInfoCard" class="wrap hide"><div class="card"><b>版本：</b>沛鴻 HR Web V39.1｜出勤匯入缺上班卡判斷修正版：後台改為左側固定選單＋右側內容切換，減少上下滑動；加班維持加班單模式，打卡/Excel匯入只做出勤。</div></div></main>
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const supabase = createClient('https://mhsasrjpuottlmhsutnb.supabase.co', 'sb_publishable_2lGa4xcG6gxuFTYas0A0Bw_1I56RG5I');
@@ -490,7 +492,7 @@ function setupAdminEnterpriseLayout(){
   const children = [...page.children].filter(el=>el.id !== 'hrLoginBox');
   const header = children.find(el=>el.querySelector?.('h1')?.textContent?.includes('HR 後台')) || children[0];
   if(!header) return;
-  if(!header.querySelector('.admin-v389-badge')){ const b=document.createElement('div'); b.className='ok admin-v389-badge'; b.textContent='V38.9 後台左側選單已啟用：請用左側選單切換功能，不會再全部展開。'; header.appendChild(b); }
+  if(!header.querySelector('.admin-v389-badge')){ const b=document.createElement('div'); b.className='ok admin-v389-badge'; b.textContent='V39.1 後台左側選單已啟用；已修正 Excel 匯入缺上班卡判斷。' ; header.appendChild(b); }
   const sidebar = document.createElement('aside');
   sidebar.className = 'admin-sidebar';
   sidebar.innerHTML = `<div class="admin-sidebar-title">後台選單</div>` + Object.entries(adminPanelLabels).map(([key,label])=>`<button type="button" class="admin-menu-btn" data-panel="${key}" onclick="setAdminPanel('${key}')">${label}</button>`).join('');
@@ -829,6 +831,18 @@ function normalizeExcelTime(v){
   if(!m) return '';
   return `${String(m[1]).padStart(2,'0')}:${String(m[2]).padStart(2,'0')}`;
 }
+function attendanceImportTimeToMinutes(time){
+  const m = String(time||'').match(/^(\d{1,2}):(\d{2})$/);
+  if(!m) return null;
+  return Number(m[1]) * 60 + Number(m[2]);
+}
+function attendanceImportLooksLikeCheckoutInCheckInColumn(checkIn, checkOut){
+  if(!checkIn || checkOut) return false;
+  const minutes = attendanceImportTimeToMinutes(checkIn);
+  // 打卡之星偶爾會把下班卡寫在「上班打卡時間」欄。固定班為 09:00-17:00，
+  // 若上班欄位出現中午後時間且沒有下班欄位，視為下班卡，讓系統判定缺上班卡。
+  return minutes !== null && minutes >= 12 * 60;
+}
 function attendanceImportTimestamp(date, time){
   if(!date || !time) return null;
   return `${date}T${time}:00`;
@@ -870,17 +884,23 @@ async function readAttendanceExcelFile(){
     const employeeName = idxName >= 0 ? excelCellText(row[idxName]) : '';
     const department = idxDept >= 0 ? excelCellText(row[idxDept]) : '';
     const date = normalizeExcelDate(row[idxDate]);
-    const checkIn = normalizeExcelTime(row[idxIn]);
-    const checkOut = normalizeExcelTime(row[idxOut]);
+    let checkIn = normalizeExcelTime(row[idxIn]);
+    let checkOut = normalizeExcelTime(row[idxOut]);
     const lateReason = idxLateReason >= 0 ? excelCellText(row[idxLateReason]) : '';
+    const rawCheckInMovedToCheckOut = attendanceImportLooksLikeCheckoutInCheckInColumn(checkIn, checkOut);
+    if(rawCheckInMovedToCheckOut){
+      checkOut = checkIn;
+      checkIn = '';
+    }
     if(!employeeNo && !date && !checkIn && !checkOut) continue;
     if(!employeeNo || !date){ errors.push(`第${i+1}列缺員工編號或日期`); continue; }
     const key = `${employeeNo}__${date}`;
-    if(!grouped.has(key)) grouped.set(key, {employeeNo, employeeName, department, date, checkIn:'', checkOut:'', noOvertime:false, noOvertimeReason:'', rowNos:[]});
+    if(!grouped.has(key)) grouped.set(key, {employeeNo, employeeName, department, date, checkIn:'', checkOut:'', noOvertime:false, noOvertimeReason:'', checkInColumnMovedToCheckOut:false, rowNos:[]});
     const item = grouped.get(key);
     item.rowNos.push(i+1);
     if(checkIn && (!item.checkIn || checkIn < item.checkIn)) item.checkIn = checkIn;
     if(checkOut && (!item.checkOut || checkOut > item.checkOut)) item.checkOut = checkOut;
+    if(rawCheckInMovedToCheckOut) item.checkInColumnMovedToCheckOut = true;
     if(checkOut && /非加班|不計加班|不算加班/i.test(lateReason)){ item.noOvertime = true; item.noOvertimeReason = lateReason || '非加班/私事'; }
   }
   const parsed = [...grouped.values()].sort((a,b)=> a.date.localeCompare(b.date) || a.employeeNo.localeCompare(b.employeeNo));
@@ -895,9 +915,13 @@ async function buildAttendanceImportPreview(){
   if(dates.length){
     const start = dates[0] + 'T00:00:00';
     const end = attendanceAddDays(dates[dates.length-1], 1) + 'T00:00:00';
-    const r = await supabase.from('attendance').select('id, employee_id, check_in, check_out').gte('check_in', start).lt('check_in', end).limit(5000);
-    if(r.error) throw new Error('讀取既有出勤失敗：' + r.error.message);
-    existing = r.data || [];
+    const rIn = await supabase.from('attendance').select('id, employee_id, check_in, check_out').gte('check_in', start).lt('check_in', end).limit(5000);
+    if(rIn.error) throw new Error('讀取既有出勤失敗：' + rIn.error.message);
+    const rOut = await supabase.from('attendance').select('id, employee_id, check_in, check_out').gte('check_out', start).lt('check_out', end).limit(5000);
+    if(rOut.error) throw new Error('讀取既有出勤失敗：' + rOut.error.message);
+    const exMap = new Map();
+    [...(rIn.data || []), ...(rOut.data || [])].forEach(x => exMap.set(String(x.id), x));
+    existing = [...exMap.values()];
   }
   const existingKey = new Map(existing.map(x => [`${x.employee_id}__${attendanceDateKeyFromTimestamp(x.check_in || x.check_out)}`, x]));
   pendingAttendanceImportRows = parsed.map(x => {
@@ -908,7 +932,7 @@ async function buildAttendanceImportPreview(){
       employeeId: emp?.id || '',
       matchedName: emp?.name || '',
       existsId: key ? (existingKey.get(key)?.id || '') : '',
-      status: !emp ? '找不到員工' : (!x.checkIn && !x.checkOut ? '缺上下班' : (existingKey.has(key) ? '已有資料，會更新' : '可匯入'))
+      status: !emp ? '找不到員工' : (!x.checkIn && !x.checkOut ? '缺上下班' : (!x.checkIn && x.checkOut ? (existingKey.has(key) ? '缺上班卡，會更新' : '缺上班卡') : (x.checkIn && !x.checkOut ? (existingKey.has(key) ? '缺下班卡，會更新' : '缺下班卡') : (existingKey.has(key) ? '已有資料，會更新' : '可匯入'))))
     };
   });
   return {fileName, errors, rows: pendingAttendanceImportRows};
@@ -921,7 +945,7 @@ window.previewAttendanceExcelImport = async function(){
     const updateCount = res.rows.filter(r=>r.existsId).length;
     const missingCount = res.rows.filter(r=>!r.employeeId).length;
     $('attendanceImportSummary').innerHTML = `檔案：${res.fileName}｜合併後 ${res.rows.length} 筆｜可寫入 ${okCount} 筆｜既有更新 ${updateCount} 筆｜找不到員工 ${missingCount} 筆${res.errors.length ? '<br>注意：'+res.errors.join('；') : ''}`;
-    $('attendanceImportPreview').innerHTML = table(['狀態','員工編號','Excel姓名','系統姓名','日期','上班','下班','加班判斷','原始列'], res.rows.slice(0,300).map(r=>[r.status,r.employeeNo,r.employeeName||'-',r.matchedName||'-',r.date,r.checkIn||'-',r.checkOut||'-',r.noOvertime?'不自動算加班':'只做出勤',r.rowNos.join(',')]));
+    $('attendanceImportPreview').innerHTML = table(['狀態','員工編號','Excel姓名','系統姓名','日期','上班','下班','缺卡判斷','加班判斷','原始列'], res.rows.slice(0,300).map(r=>[r.status,r.employeeNo,r.employeeName||'-',r.matchedName||'-',r.date,r.checkIn||'-',r.checkOut||'-',r.checkInColumnMovedToCheckOut?'上班欄晚間時間→判定缺上班卡':(!r.checkIn&&r.checkOut?'缺上班卡':(r.checkIn&&!r.checkOut?'缺下班卡':'正常')),r.noOvertime?'不自動算加班':'只做出勤',r.rowNos.join(',')]));
     msg('Excel預覽完成');
   }catch(err){
     $('attendanceImportPreview').innerHTML = `<div class="bad">${err.message || String(err)}</div>`;
@@ -1732,6 +1756,66 @@ async function hrReportLoadAllData(){
 }
 function hrReportEmpName(empMap, id){ const e=empMap[String(id)]||{}; return hrReportPick(e,['name','employee_name'],''); }
 function hrReportEmpNo(empMap, id){ const e=empMap[String(id)]||{}; return hrReportPick(e,['employee_no','emp_no','code'],''); }
+
+// ===== V39 HR內控加班監控：只在後台顯示，不提醒員工、不禁止送單 =====
+let lastOvertimeControlRows = null;
+function overtimeControlStatus(hours){
+  const h = hrReportN(hours);
+  if(h >= 46) return {label:'紅燈', cls:'ot-danger', note:'46h以上'};
+  if(h >= 36) return {label:'黃燈', cls:'ot-warn', note:'36h以上'};
+  return {label:'正常', cls:'ot-ok', note:'未達36h'};
+}
+function overtimeControlMonthRange(){
+  const year = $('hrReportYear')?.value || String(new Date().getFullYear());
+  const month = $('hrReportMonth')?.value || String(new Date().getMonth()+1).padStart(2,'0');
+  if(month === 'all') return {label:`${year}全年`, all:true};
+  return {label:`${year}-${month}`, all:false};
+}
+function buildOvertimeControlRows(data){
+  const approvedOt = statsApprovedRows((data.overtime||[]).filter(o=>hrReportInRange(o.overtime_date || o.date || o.created_at)));
+  const byEmp = new Map((data.employees||[]).map(e=>[String(e.id), {
+    employee_no:hrReportPick(e,['employee_no','emp_no']), name:hrReportPick(e,['name','employee_name']), department:hrReportPick(e,['department']), hours:0, amount:0, count:0
+  }]));
+  for(const o of approvedOt){
+    const id = String(o.employee_id||'');
+    if(!byEmp.has(id)) continue;
+    const row = byEmp.get(id);
+    row.hours = round2(row.hours + hrReportN(o.overtime_hours||o.total_hours||o.calculated_hours));
+    row.amount = round2(row.amount + hrReportN(o.overtime_pay||o.calculated_pay||o.pay_amount||o.overtime_amount||o.total_pay));
+    row.count += 1;
+  }
+  return Array.from(byEmp.values()).map(r=>({...r, status:overtimeControlStatus(r.hours)})).sort((a,b)=>b.hours-a.hours || String(a.employee_no||'').localeCompare(String(b.employee_no||''),'zh-Hant'));
+}
+window.generateOvertimeControlCenter = async function(){
+  try{
+    if(!hrLoginPrompt()) return;
+    initHrReportFilters();
+    const data = await hrReportLoadAllData();
+    const rows = buildOvertimeControlRows(data);
+    lastOvertimeControlRows = rows;
+    const red = rows.filter(r=>r.hours>=46).length;
+    const yellow = rows.filter(r=>r.hours>=36 && r.hours<46).length;
+    const period = overtimeControlMonthRange().label;
+    const display = rows.map((r,i)=>[i+1,r.employee_no,r.name,r.department||'-',r.count,round2(r.hours), '$'+money(r.amount), `<span class="${r.status.cls}">${r.status.label}</span>`, r.status.note]);
+    $('overtimeControlPreview').innerHTML = `<h3>V39 HR內控加班監控｜${period}</h3><div class="warn">此表只顯示於 HR 後台；員工端不會看到，也不會跳送單提醒。</div><div class="ok">紅燈 ${red} 人｜黃燈 ${yellow} 人｜統計來源：核准加班單</div>` + table(['排名','員編','姓名','部門','核准單數','本期加班時數','加班費','警示','說明'], display);
+    msg('HR內控加班監控已產生。');
+  }catch(e){ console.error(e); msg('HR內控加班監控失敗：'+(e.message||e),'bad'); }
+};
+window.exportOvertimeControlCenter = async function(){
+  try{
+    if(!hrLoginPrompt()) return;
+    initHrReportFilters();
+    const rows = lastOvertimeControlRows || buildOvertimeControlRows(await hrReportLoadAllData());
+    if(!window.XLSX){ msg('Excel 套件尚未載入，請重新整理後再試。','bad'); return; }
+    const aoa = [['排名','員工編號','姓名','部門','核准單數','本期加班時數','加班費','警示','說明'], ...rows.map((r,i)=>[i+1,r.employee_no,r.name,r.department||'',r.count,round2(r.hours),hrReportMoney(r.amount),r.status.label,r.status.note])];
+    const wb = XLSX.utils.book_new();
+    hrReportAddSheet(wb, 'HR內控加班監控', aoa);
+    const ymd = new Date().toISOString().slice(0,10).replaceAll('-','');
+    XLSX.writeFile(wb, `沛鴻_HR內控加班監控_${hrReportPeriodLabel()}_${ymd}.xlsx`);
+    msg('HR內控加班監控 Excel 已產生。');
+  }catch(e){ console.error(e); msg('匯出 HR內控加班監控失敗：'+(e.message||e),'bad'); }
+};
+
 function hrReportOverviewSheet(data){
   const payrollInRange = data.payroll.filter(p => hrReportInRange(p.created_at || p.payroll_month || p.month));
   const otInRange = data.overtime.filter(o => hrReportInRange(o.overtime_date || o.date || o.created_at));
